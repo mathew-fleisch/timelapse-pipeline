@@ -30,7 +30,7 @@ The Raspberry Pi doesn't have enough processing power to run ffmpeg and takes pi
     - Queries/scrapes internet for mp3 files
     - Should save metadata
     - should reject durations under 150 seconds
- - `[TODO]` scripts/processor/merge-audio-video.sh
+ - [scripts/processor/merge-audio-video.sh](scripts/processor/merge-audio-video.sh)
     - Speeds up video to length of audio file, then merges them together
  - `[TODO]` scripts/processor/upload-to-youtube.sh
     - Requires api key, oauth tokens, and username/password to authenticate and upload
