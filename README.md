@@ -6,10 +6,32 @@ This project has tools and scripts to set up timelapse pipelines using Raspberry
 
 todo (write installation instructions and script)
 
-### Flow
+### Pipeline
 
-raspistill saves one picture every second to a holding directory via scripts/pi/start-timelapse.sh
+***On the Raspberry Pi***
 
-Another script then renames and moves those files to organize them in folders by date.
+Images are captured at 1fps via the raspistill command line trigger, and saved to a local staging directory. Another script pushes those images to a long term storage solution, like s3, or directly to the processing computer.
+ - [scripts/pi/start-timelapse.sh](scripts/pi/start-timelapse.sh)
+    - raspistill saves one picture every second to a holding directory
+ - `[TODO]` scripts/pi/clean-up-save.sh
+    - use rsync/awscli/scp to copy all staged images to the long term storage solution
+    - Stores images using the following naming convention:<br />
+ `[LONG-TERM-STORAGE-URL]/<camera-name>/<yyyy>/<mm>/<dd>/<yyyy_mm_dd_hh>/yyyy_mm_dd_hh_mm_ss.jpg`
 
-Finally, a third script pushes the renamed files to s3 (this script should be easy to use another copy method like ftp, scp or rsync)
+***On the processing computer***
+
+The Raspberry Pi doesn't have enough processing power to run ffmpeg and takes pictures, so post processing is expected to be run elsewhere. Images are copied to the processing computer, and ffmpeg creates an mp4 after flash frames are removed; occasionally the camera's auto-white-balance will flicker/flash and are removed by an optional flag. 
+ - `[TODO]` scripts/processor/stage-images.sh
+    - Get images from long term storage solution
+ - [scripts/processor/timelapse.sh](scripts/processor/timelapse.sh)
+    - Copy the staged images into one directory, and ffmpeg them into an mp4
+    - Can optionally remove flashes via gap detection
+ - `[TODO]` scripts/processor/get-audio.sh
+    - Queries/scrapes internet for mp3 files
+    - Should save metadata
+    - should reject durations under 150 seconds
+ - `[TODO]` scripts/processor/merge-audio-video.sh
+    - Speeds up video to length of audio file, then merges them together
+ - `[TODO]` scripts/processor/upload-to-youtube.sh
+    - Requires api key, oauth tokens, and username/password to authenticate and upload
+    - Pipe in metadata about mp3 into description
