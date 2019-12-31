@@ -4,7 +4,7 @@ IFS='' read -r -d '' help <<"EOF"
 -------------------------------------------------------------
 Random Mp3s from FreeMediaArchive.org
 -------------------------------------------------------------
-Usage Example: ./get-music.sh --genre "Lo-fi" --number 2
+Usage Example: ./get-music.sh --genre "Lo-fi" --page 0 | jq -r '.[0]'
 
 [req]--genre  [str]  - Blues,Classical,Folk,Hip-Hop,Instrumental,
                        International,Jazz,Lo-fi,Old-Time__Historic,
@@ -12,7 +12,6 @@ Usage Example: ./get-music.sh --genre "Lo-fi" --number 2
      --page   [int]  - (0:default for random) There are 20 songs
                        per page, and this value defines an offset.
 EOF
-RETURN_NUMBER=1
 PAGE=0
 while [[ $# -gt 0 ]] && [[ "$1" == "--"* ]]; do
   opt="$1";
