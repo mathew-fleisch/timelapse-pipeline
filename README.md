@@ -26,10 +26,8 @@ The Raspberry Pi doesn't have enough processing power to run ffmpeg and takes pi
  - [scripts/processor/timelapse.sh](scripts/processor/timelapse.sh)
     - Copy the staged images into one directory, and ffmpeg them into an mp4
     - Can optionally remove flashes via gap detection
- - `[TODO]` scripts/processor/get-audio.sh
+ - [scripts/processor/get-music.sh](scripts/processor/get-music.sh)
     - Queries/scrapes internet for mp3 files
-    - Should save metadata
-    - should reject durations under 150 seconds
  - [scripts/processor/merge-audio-video.sh](scripts/processor/merge-audio-video.sh)
     - Speeds up video to length of audio file, then merges them together
  - `[TODO]` scripts/processor/upload-to-youtube.sh
