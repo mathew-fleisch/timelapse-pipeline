@@ -25,10 +25,9 @@ VIDEO_LENGTH=$(get_duration_in_seconds $2)
 
 echo "Music: $MUSIC_LENGTH | Video: $VIDEO_LENGTH"
 
-PERCENTAGE=$((MUSIC_LENGTH * 100 / VIDEO_LENGTH))
-REFLECTION=$((100 - PERCENTAGE))
+PERCENTAGE=$((MUSIC_LENGTH * 100000 / VIDEO_LENGTH))
 
-echo "Speed up footage: $REFLECTION%"
+echo "Speed up footage to match audio length."
 FAST=$(echo $2 | sed -e 's/.mp4/_fast.mp4/g')
 ffmpeg -i $2 -filter:v "setpts=0.$PERCENTAGE*PTS" $FAST
 
