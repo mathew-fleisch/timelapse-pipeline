@@ -101,7 +101,7 @@ TARGET_FILENAME="${T_YEAR}_${T_MONTH}_${T_DAY}/${FILENAME}"
 # video already in the target-base s3 bucket. If
 # it exists, download it, otherwise download the
 # images, and build the timelapse using ffmpeg.
-PROCESS_LOG_EXISTS=$(aws s3 ls ${TARGET_BASE}/${T_YEAR}_${T_MONTH}_${T_DAY}/data.json)
+PROCESS_LOG_EXISTS=$(aws s3 ls ${TARGET_BASE}/${T_YEAR}_${T_MONTH}_${T_DAY}/${NAME}.json)
 if [ -z "$PROCESS_LOG_EXISTS" ]; then
   if [ -z "$SOURCE_BASE" ]; then
     echo "A source s3 bucket+path is required to run this section"
@@ -134,12 +134,12 @@ if [ -z "$PROCESS_LOG_EXISTS" ]; then
   aws s3 cp $LOCAL_FILENAME ${TARGET_BASE}/${TARGET_FILENAME}
 
   # Save json file
-  echo "{\"name\":${NAME},\"filename\":\"${TARGET_FILENAME}\",\"created\":${NOW},\"duration\":${DURATION}}" > ${TARGET_DIR}/data.json
-  aws s3 cp ${TARGET_DIR}/data.json ${TARGET_BASE}/${T_YEAR}_${T_MONTH}_${T_DAY}/data.json
+  echo "{\"name\":${NAME},\"filename\":\"${TARGET_FILENAME}\",\"created\":${NOW},\"duration\":${DURATION}}" > ${TARGET_DIR}/${NAME}.json
+  aws s3 cp ${TARGET_DIR}/${NAME}.json ${TARGET_BASE}/${T_YEAR}_${T_MONTH}_${T_DAY}/${NAME}.json
 else
-  # There is a data.json file, download the processed video
+  # There is a ${NAME}.json file, download the processed video
   echo "Download json file..."
-  aws s3 sync ${TARGET_BASE}/${T_YEAR}_${T_MONTH}_${T_DAY}/data.json ${TARGET_DIR}/.
+  aws s3 sync ${TARGET_BASE}/${T_YEAR}_${T_MONTH}_${T_DAY}/${NAME}.json ${TARGET_DIR}/.
   echo "Download mp4 file..."
   aws s3 sync ${TARGET_BASE}/${TARGET_FILENAME} ${TARGET_DIR}/output/.
 fi
@@ -167,6 +167,7 @@ else
       THIS_MPTHREE=$(_jq '.mpthree')
       THIS_FILENAME=$(echo $THIS_MPTHREE | shasum | awk '{print $1}')
       echo "$THIS_ARTIST"
+      echo "$THIS_MPTHREE"
       echo "${THIS_FILENAME}.mp3"
       curl -s $THIS_MPTHREE --output ${TARGET_DIR}/music/${THIS_FILENAME}.mp3
       THIS_DURATION=$(get_duration_in_seconds ${TARGET_DIR}/music/${THIS_FILENAME}.mp3)
