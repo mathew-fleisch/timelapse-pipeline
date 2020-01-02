@@ -36,6 +36,7 @@ Usage: ./start.sh [arguments]
                                International,Jazz,Lo-fi,Old-Time__Historic,
                                Pop,Rock,Soul-RB
 EOF
+
 OVERWRITE_AUDIO=1
 DEFAULT_START=0
 DEFAULT_END=23
@@ -153,9 +154,15 @@ else
   while [ $FOUND_MUSIC -eq 0 ]; do
     MUSIC=$(./get-music.sh --genre $GENRE)
     mkdir -p ${TARGET_DIR}/music
-    while IFS= read -r song; do
-      echo "... $song ..."
-    done <<< "$MUSIC"
+
+    for row in $(echo "${MUSIC}" | jq -r '.[] | base64'); do
+      _jq() {
+       echo ${row} | base64 --decode | jq -r ${1}
+      }
+      echo $(_jq '.mpthree')
+    done
+
+    let FOUND_MUSIC++
 
   done
 
