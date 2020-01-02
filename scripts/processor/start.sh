@@ -103,9 +103,13 @@ if [ -z "$PROCESS_LOG_EXISTS" ]; then
 
   # Pick arbitrary threshold of minimum frames
   # to create a timelapse. avg ~ 60k frames
-  ./timelapse.sh --target-date $TARGET_DATE --stage-dir $TARGET_DIR --name $NAME
+  ./timelapse.sh --target-date $TARGET_DATE --stage-dir $TARGET_DIR --copy-staged 1 --name $NAME
 
   INITIAL_FILENAME="${TARGET_DIR}/output/${NAME}_${T_YEAR}_${T_MONTH}_${T_DAY}.mp4"
+  if ! [ -f "$INITIAL_FILENAME" ]; then
+    echo "mp4 failed to generate..."
+    exit 1
+  fi
   DURATION=$(get_duration_in_seconds $INITIAL_FILENAME)
   TARGET_FILENAME="${T_YEAR}_${T_MONTH}_${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_raw.mp4"
   aws s3 cp $INITIAL_FILENAME ${TARGET_BASE}/${TARGET_FILENAME}
