@@ -108,6 +108,7 @@ if [ -z "$PROCESS_LOG_EXISTS" ]; then
     exit 1
   fi
 
+  rm -rf ${TARGET_DIR}/stage
   mkdir -p ${TARGET_DIR}/stage
 
   # for x in {"$DEFAULT_START".."$DEFAULT_END"}
