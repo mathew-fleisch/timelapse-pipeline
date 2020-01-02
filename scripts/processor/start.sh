@@ -103,9 +103,9 @@ if [ -z "$PROCESS_LOG_EXISTS" ]; then
 
   # Pick arbitrary threshold of minimum frames
   # to create a timelapse. avg ~ 60k frames
-  ./timelapse.sh --target-date $TARGET_DATE --stage-dir $TARGET_DIR --name $CAMERA_NAME
+  ./timelapse.sh --target-date $TARGET_DATE --stage-dir $TARGET_DIR --name $NAME
 
-  INITIAL_FILENAME="${TARGET_DIR}/output/${CAMERA_NAME}_${T_YEAR}_${T_MONTH}_${T_DAY}.mp4"
+  INITIAL_FILENAME="${TARGET_DIR}/output/${NAME}_${T_YEAR}_${T_MONTH}_${T_DAY}.mp4"
   DURATION=$(get_duration_in_seconds $INITIAL_FILENAME)
   TARGET_FILENAME="${T_YEAR}_${T_MONTH}_${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_raw.mp4"
   aws s3 cp $INITIAL_FILENAME ${TARGET_BASE}/${TARGET_FILENAME}
@@ -115,7 +115,7 @@ if [ -z "$PROCESS_LOG_EXISTS" ]; then
   aws s3 cp ${TARGET_DIR}/data.json ${TARGET_BASE}/${T_YEAR}_${T_MONTH}_${T_DAY}/data.json
 else
   # There is a data.json file, download the processed video
-
+  echo "Download json file..."
 fi
 
 
