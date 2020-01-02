@@ -34,6 +34,7 @@ Usage: ./start.sh [arguments]
                                to 0 to use existing audio file.
 EOF
 OVERWRITE_AUDIO=1
+REMOVE_NIGHT=1
 while [[ $# -gt 0 ]] && [[ "$1" == "--"* ]]; do
   opt="$1";
   shift;
@@ -55,6 +56,8 @@ while [[ $# -gt 0 ]] && [[ "$1" == "--"* ]]; do
          SOURCE_BASE="$1"; shift;;
       "--overwrite-audio" )
          OVERWRITE_AUDIO="$1"; shift;;
+      "--remove-night" )
+         REMOVE_NIGHT="$1"; shift;;
       *) echo >&2 "Invalid option: $@"; exit 1;;
   esac
 done
@@ -101,6 +104,16 @@ if [ -z "$PROCESS_LOG_EXISTS" ]; then
   # Download images into target directory
   aws s3 cp ${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY} $TARGET_DIR --recursive
 
+  # Inefficient way of removing the night... should just not copy them in the first place
+  if [ "$REMOVE_NIGHT" -eq 1 ]; then
+    rm -rf $TARGET_DIR/${T_YEAR}_${T_MONTH}_${T_DAY}_00
+    rm -rf $TARGET_DIR/${T_YEAR}_${T_MONTH}_${T_DAY}_01
+    rm -rf $TARGET_DIR/${T_YEAR}_${T_MONTH}_${T_DAY}_02
+    rm -rf $TARGET_DIR/${T_YEAR}_${T_MONTH}_${T_DAY}_03
+    rm -rf $TARGET_DIR/${T_YEAR}_${T_MONTH}_${T_DAY}_22
+    rm -rf $TARGET_DIR/${T_YEAR}_${T_MONTH}_${T_DAY}_23
+  fi
+  
   # Pick arbitrary threshold of minimum frames
   # to create a timelapse. avg ~ 60k frames
   ./timelapse.sh --target-date $TARGET_DATE --stage-dir $TARGET_DIR --copy-staged 1 --name $NAME
