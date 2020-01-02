@@ -37,10 +37,11 @@ Usage: ./start.sh [arguments]
                                Pop,Rock,Soul-RB
 EOF
 
+SHORT_SONG_THRESHOLD=150
 OVERWRITE_AUDIO=1
 DEFAULT_START=0
 DEFAULT_END=23
-GENRE="Lo-fi"
+GENRE="Hip-Hop"
 while [[ $# -gt 0 ]] && [[ "$1" == "--"* ]]; do
   opt="$1";
   shift;
@@ -138,12 +139,13 @@ if [ -z "$PROCESS_LOG_EXISTS" ]; then
 else
   # There is a data.json file, download the processed video
   echo "Download json file..."
-  aws s3 sync ${TARGET_BASE}/${T_YEAR}_${T_MONTH}_${T_DAY}/data.json ${TARGET_DIR}/data.json
+  aws s3 sync ${TARGET_BASE}/${T_YEAR}_${T_MONTH}_${T_DAY}/data.json ${TARGET_DIR}/.
   echo "Download mp4 file..."
-  aws s3 sync ${TARGET_BASE}/${TARGET_FILENAME} $LOCAL_FILENAME
+  aws s3 sync ${TARGET_BASE}/${TARGET_FILENAME} ${TARGET_DIR}/output/.
 fi
 
 # Either the mp4 was downloaded, or generated.
+# SONG=""
 if [ "$OVERWRITE_AUDIO" -eq 0 ]; then
   # Pull processed.json and see if this day has
   # an entry. Pull mp3 from s3/website
@@ -155,34 +157,37 @@ else
     MUSIC=$(./get-music.sh --genre $GENRE)
     mkdir -p ${TARGET_DIR}/music
 
-    for row in $(echo "${MUSIC}" | jq -r '.[] | base64'); do
+    for row in $(echo "${MUSIC}" | jq -r '.[] | @base64'); do
       _jq() {
        echo ${row} | base64 --decode | jq -r ${1}
       }
-      echo $(_jq '.mpthree')
+      THIS_ARTIST=$(_jq '.artist')
+      THIS_ALBUM=$(_jq '.artist')
+      THIS_GENRE=$(_jq '.genre')
+      THIS_MPTHREE=$(_jq '.mpthree')
+      THIS_FILENAME=$(echo $THIS_MPTHREE | shasum | awk '{print $1}')
+      echo "$THIS_ARTIST"
+      echo "${THIS_FILENAME}.mp3"
+      curl -s $THIS_MPTHREE --output ${TARGET_DIR}/music/${THIS_FILENAME}.mp3
+      THIS_DURATION=$(get_duration_in_seconds ${TARGET_DIR}/music/${THIS_FILENAME}.mp3)
+      echo "Short song threshold: $SHORT_SONG_THRESHOLD"
+      echo "Checking mp3 duration: $THIS_DURATION"
+      if [ $THIS_DURATION -gt $SHORT_SONG_THRESHOLD ]; then
+        echo "This song should do!"
+        # SONG="${TARGET_DIR}/music/${THIS_FILENAME}.mp3"
+        let FOUND_MUSIC++
+        # TODO: Check to see if song has been used before...
+        break
+      fi
     done
-
-    let FOUND_MUSIC++
-
   done
-
-
-# Get audio method (script, file)
-#
-# [by script] Get acceptable audio file
-# ./get-music.sh --genre "Hip-Hop" --page 0 | jq -r '.'
-# cycle through array, curl each mp3 url until there is
-# a duration longer than 150 seconds
-# Use get_duration_in_seconds function from functions.sh
-# to get duration in seconds 
-# 
-# [by file] 
 fi
 
 # Merge audio/video
-# ./merge-audio-video.sh [/path/to/local/file.mp3] [/path/to/local/timelapse.mp4]
+./merge-audio-video.sh ${TARGET_DIR}/music/${THIS_FILENAME}.mp3 ${TARGET_DIR}/output/${FILENAME}
 
 # Upload to s3
+aws s3 cp ${TARGET_DIR}/output/${NAME}_${T_YEAR}_${T_MONTH}_${T_DAY}_fade.mp4 ${TARGET_BASE}/${T_YEAR}_${T_MONTH}_${T_DAY}_${NAME}.mp4
 
 # Save information to a repo [date, camera(s), initial frames, song details, final duration, processed at]
 
