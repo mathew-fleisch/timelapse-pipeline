@@ -76,7 +76,7 @@ if [ -z "$TARGET_DIR" ]; then
 fi
 # source-base is not necessary if the raw video already exists
 # if [ -z "$SOURCE_BASE" ]; then
-  echo "$help"
+#   echo "$help"
 #   echo "Must include an s3 bucket+path to pull images from"
 #   exit 1
 # fi
