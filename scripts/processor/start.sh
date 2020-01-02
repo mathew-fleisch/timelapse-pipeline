@@ -32,10 +32,14 @@ Usage: ./start.sh [arguments]
     --overwrite-audio [bool] - default(1) behavior is to pick a new
                                random audio file, if one exists. Set
                                to 0 to use existing audio file.
+    --genre           [str]  - Blues,Classical,Folk,Hip-Hop,Instrumental,
+                               International,Jazz,Lo-fi,Old-Time__Historic,
+                               Pop,Rock,Soul-RB
 EOF
 OVERWRITE_AUDIO=1
 DEFAULT_START=0
 DEFAULT_END=23
+GENRE="Lo-fi"
 while [[ $# -gt 0 ]] && [[ "$1" == "--"* ]]; do
   opt="$1";
   shift;
@@ -60,6 +64,8 @@ while [[ $# -gt 0 ]] && [[ "$1" == "--"* ]]; do
       "--remove-night" )
          DEFAULT_START=4
          DEFAULT_END=21; shift;;
+      "--genre" )
+         GENRE="$1"; shift;;
       *) echo >&2 "Invalid option: $@"; exit 1;;
   esac
 done
@@ -79,12 +85,6 @@ if [ -z "$TARGET_DIR" ]; then
   echo "Must include a directory with write access"
   exit 1
 fi
-# source-base is not necessary if the raw video already exists
-# if [ -z "$SOURCE_BASE" ]; then
-#   echo "$help"
-#   echo "Must include an s3 bucket+path to pull images from"
-#   exit 1
-# fi
 if [ -z "$TARGET_BASE" ]; then
   echo "$help"
   echo "Must include an s3 bucket+path to push images to"
@@ -92,6 +92,9 @@ if [ -z "$TARGET_BASE" ]; then
 fi
 
 NOW=$(date +%s)
+FILENAME="${NAME}_${T_YEAR}_${T_MONTH}_${T_DAY}.mp4"
+LOCAL_FILENAME="${TARGET_DIR}/output/${FILENAME}"
+TARGET_FILENAME="${T_YEAR}_${T_MONTH}_${T_DAY}/${FILENAME}"
 # Check to see if there is a processed timelapse
 # video already in the target-base s3 bucket. If
 # it exists, download it, otherwise download the
@@ -109,35 +112,52 @@ if [ -z "$PROCESS_LOG_EXISTS" ]; then
   for (( x="$DEFAULT_START"; x<="$DEFAULT_END"; x++ ))
   do
     if [[ "${x}" -lt 10 ]]; then
-      hour="0$x"
+      CURRENT_HOUR="0$x"
     else
-      hour=$x
+      CURRENT_HOUR=$x
     fi
-    echo "Current hour: $hour"
-    aws s3 cp ${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${hour}/* ${TARGET_DIR}/stage/.
-
+    echo "Current hour: $CURRENT_HOUR"
+    aws s3 sync ${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${CURRENT_HOUR} ${TARGET_DIR}/stage/.
   done
 
   # Pick arbitrary threshold of minimum frames
   # to create a timelapse. avg ~ 60k frames
   ./timelapse.sh --target-date $TARGET_DATE --stage-dir $TARGET_DIR --remove-flashes 1 --name $NAME
 
-  INITIAL_FILENAME="${TARGET_DIR}/output/${NAME}_${T_YEAR}_${T_MONTH}_${T_DAY}.mp4"
-  if ! [ -f "$INITIAL_FILENAME" ]; then
+  if ! [ -f "$LOCAL_FILENAME" ]; then
     echo "mp4 failed to generate..."
     exit 1
   fi
-  DURATION=$(get_duration_in_seconds $INITIAL_FILENAME)
-  TARGET_FILENAME="${T_YEAR}_${T_MONTH}_${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_raw.mp4"
-  aws s3 cp $INITIAL_FILENAME ${TARGET_BASE}/${TARGET_FILENAME}
+  DURATION=$(get_duration_in_seconds $LOCAL_FILENAME)
+  aws s3 cp $LOCAL_FILENAME ${TARGET_BASE}/${TARGET_FILENAME}
 
   # Save json file
-  echo "{\"filename\":\"${TARGET_FILENAME}\",\"created\":${NOW},\"duration\":${DURATION}}" > ${TARGET_DIR}/data.json
+  echo "{\"name\":${NAME},\"filename\":\"${TARGET_FILENAME}\",\"created\":${NOW},\"duration\":${DURATION}}" > ${TARGET_DIR}/data.json
   aws s3 cp ${TARGET_DIR}/data.json ${TARGET_BASE}/${T_YEAR}_${T_MONTH}_${T_DAY}/data.json
 else
   # There is a data.json file, download the processed video
   echo "Download json file..."
+  aws s3 sync ${TARGET_BASE}/${T_YEAR}_${T_MONTH}_${T_DAY}/data.json ${TARGET_DIR}/data.json
+  echo "Download mp4 file..."
+  aws s3 sync ${TARGET_BASE}/${TARGET_FILENAME} $LOCAL_FILENAME
 fi
+
+# Either the mp4 was downloaded, or generated.
+if [ "$OVERWRITE_AUDIO" -eq 0 ]; then
+  # Pull processed.json and see if this day has
+  # an entry. Pull mp3 from s3/website
+  echo "Pull mp3 from s3"
+else
+  FOUND_MUSIC=0
+
+  while [ $FOUND_MUSIC -eq 0 ]; do
+    MUSIC=$(./get-music.sh --genre $GENRE)
+    mkdir -p ${TARGET_DIR}/music
+    while IFS= read -r song; do
+      echo "... $song ..."
+    done <<< "$MUSIC"
+
+  done
 
 
 # Get audio method (script, file)
@@ -146,11 +166,11 @@ fi
 # ./get-music.sh --genre "Hip-Hop" --page 0 | jq -r '.'
 # cycle through array, curl each mp3 url until there is
 # a duration longer than 150 seconds
-# Use get_duration_in_se  conds function from functions.sh
-# to get duration in secconds 
+# Use get_duration_in_seconds function from functions.sh
+# to get duration in seconds 
 # 
 # [by file] 
-
+fi
 
 # Merge audio/video
 # ./merge-audio-video.sh [/path/to/local/file.mp3] [/path/to/local/timelapse.mp4]

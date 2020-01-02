@@ -73,7 +73,7 @@ while IFS= read -r line; do
       "3" )
         GENRE="$line"; shift;;
       "4" )
-        MPTHREE="$line"
+        MPTHREE=$(echo $line | sed -e 's/<a\ href=\(.*\)><\/a>/\1/g' | sed -e 's/\\"//g')
         LIST="$LIST,{\"artist\":\"$ARTIST\",\"album\":\"$ALBUM\",\"genre\":\"$GENRE\",\"mpthree\":\"$MPTHREE\"}"
         TRACK=0
         ARTIST=""
