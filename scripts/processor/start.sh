@@ -61,23 +61,28 @@ done
 
 if [ -z "$NAME" ]; then
   echo "Must include a camera name"
+  echo "$help"
   exit 1
 fi
 if [ -z "$TARGET_DATE" ] || [ -z "$T_YEAR" ] || [ -z "$T_MONTH" ] || [ -z "$T_DAY" ]; then
   echo "Must include a target date"
+  echo "$help"
   exit 1
 fi
 if [ -z "$TARGET_DIR" ]; then
   echo "Must include a directory with write access"
+  echo "$help"
   exit 1
 fi
 # source-base is not necessary if the raw video already exists
 # if [ -z "$SOURCE_BASE" ]; then
 #   echo "Must include an s3 bucket+path to pull images from"
+echo "$help"
 #   exit 1
 # fi
 if [ -z "$TARGET_BASE" ]; then
   echo "Must include an s3 bucket+path to push images to"
+  echo "$help"
   exit 1
 fi
 
