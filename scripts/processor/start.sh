@@ -146,7 +146,7 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
       CURRENT_HOUR=$x
     fi
     echo "Current hour: $CURRENT_HOUR"
-    aws s3 cp ${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${CURRENT_HOUR} ${TARGET_DIR}/stage/. --recursive
+    aws s3 cp ${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${CURRENT_HOUR} ${TARGET_DIR}/stage/. --recursive --quiet
   done
 
   # Pick arbitrary threshold of minimum frames
