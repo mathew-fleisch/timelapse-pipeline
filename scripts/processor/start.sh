@@ -185,11 +185,11 @@ if [ -z "$EXISTING_AUDIO" ]; then
       _jq() {
        echo ${row} | base64 --decode | jq -r ${1}
       }
-      THIS_ARTIST=$(_jq '.artist' | base64)
-      THIS_ALBUM=$(_jq '.artist' | base64)
-      THIS_GENRE=$(_jq '.genre' | base64)
+      THIS_ARTIST=$(_jq '.artist' | sed -e 's/"/\\"/g' | base64)
+      THIS_ALBUM=$(_jq '.artist' | sed -e 's/"/\\"/g' | base64)
+      THIS_GENRE=$(_jq '.genre' | sed -e 's/"/\\"/g' | base64)
       MPTHREE_LINK=$(_jq '.mpthree')
-      THIS_MPTHREE=$(echo $MPTHREE_LINK | base64)
+      THIS_MPTHREE=$(echo $MPTHREE_LINK | sed -e 's/"/\\"/g' | base64)
       SONG_SHA=$(echo $MPTHREE_LINK | shasum | awk '{print $1}')
       ALREADY_REJECTED=$(cat ${TARGET_DIR}/music/rejected.txt | grep ${SONG_SHA})
       if [ -z "$ALREADY_REJECTED" ]; then
