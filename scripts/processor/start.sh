@@ -128,7 +128,12 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
     echo "A source s3 bucket+path is required to run this section"
     exit 1
   fi
-
+  HAS_IMAGES=$(aws s3 ls ${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${CURRENT_HOUR})
+  if [ -z "$HAS_IMAGES" ]; then
+    echo "There are no images in this source bucket:"
+    echo "${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${CURRENT_HOUR}"
+    exit 1
+  fi
   rm -rf ${TARGET_DIR}/stage
   mkdir -p ${TARGET_DIR}/stage
 
@@ -141,7 +146,7 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
       CURRENT_HOUR=$x
     fi
     echo "Current hour: $CURRENT_HOUR"
-    aws s3 sync ${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${CURRENT_HOUR} ${TARGET_DIR}/stage/.
+    aws s3 cp ${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${CURRENT_HOUR} ${TARGET_DIR}/stage/.
   done
 
   # Pick arbitrary threshold of minimum frames
@@ -156,7 +161,7 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
   aws s3 cp $LOCAL_FILENAME ${TARGET_BASE}/${TARGET_FILENAME}
   
   # Save raw video meta-data
-  put_raw_video ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timelapse.db "$KEY" "$TARGET_FILENAME" $NOW $Duration
+  put_raw_video ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timelapse.db "$KEY" "$TARGET_FILENAME" $NOW $DURATION
 else
   # There is a video file described in the raw table, download the processed video
   echo "Download mp4 file..."

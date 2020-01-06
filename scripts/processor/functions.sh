@@ -273,6 +273,21 @@ put_video()  {
     rm -rf "$2"
   fi
 
+  if ! [ -z "$DEBUG" ]; then
+    echo "Remote: \"$1\""
+    echo "Local: \"$2\""
+    echo "Key: \"$3\""
+    echo "Name: \"$4\""
+    echo "Filename: \"$5\""
+    echo "year: \"$6\""
+    echo "month: \"$7\""
+    echo "day: \"$8\""
+    echo "Audio Sha: \"$9\""
+    echo "Created Timestamp: $10"
+    echo "Duration: $11"
+  fi
+
+
   # Copy the sqlite db from s3
   aws s3 cp $1 $2 --quiet
 
