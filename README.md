@@ -21,15 +21,16 @@ Images are captured at 1fps via the raspistill command line trigger, and saved t
 ***On the post-processing computer***
 
 The Raspberry Pi doesn't have enough processing power to run ffmpeg and takes pictures, so post-processing is expected to be run elsewhere. Images are copied to the post-processing computer, and ffmpeg creates an mp4 after flash frames are removed; occasionally the camera's auto-white-balance will flicker/flash and are removed by an optional flag. 
- - `[TODO]` scripts/processor/stage-images.sh
-    - Get images from long term storage solution
- - [scripts/processor/timelapse.sh](scripts/processor/timelapse.sh)
-    - Copy the staged images into one directory, and ffmpeg them into an mp4
-    - Can optionally remove flashes via gap detection
- - [scripts/processor/get-music.sh](scripts/processor/get-music.sh)
-    - Queries/scrapes internet for mp3 files
- - [scripts/processor/merge-audio-video.sh](scripts/processor/merge-audio-video.sh)
-    - Speeds up video to length of audio file, then merges them together
- - `[TODO]` scripts/processor/upload-to-youtube.sh
-    - Requires api key, oauth tokens, and username/password to authenticate and upload
-    - Pipe in metadata about mp3 into description
+ - [scripts/processor/start.sh](scripts/processor/start.sh)
+     - Get images from long term storage solution
+     - Saves meta-data to sqlite3
+     - [scripts/processor/timelapse.sh](scripts/processor/timelapse.sh)
+        - Copy the staged images into one directory, and ffmpeg them into an mp4
+        - Can optionally remove flashes via gap detection
+     - [scripts/processor/get-music.sh](scripts/processor/get-music.sh)
+        - Queries/scrapes internet for mp3 files
+     - [scripts/processor/merge-audio-video.sh](scripts/processor/merge-audio-video.sh)
+        - Speeds up video to length of audio file, then merges them together
+     - `[TODO]` scripts/processor/upload-to-youtube.sh
+        - Requires api key, oauth tokens, and username/password to authenticate and upload
+        - Pipe in metadata about mp3 into description
