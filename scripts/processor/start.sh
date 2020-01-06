@@ -32,8 +32,7 @@ Usage: ./start.sh [arguments]
   *** --sqlite-db [filename] - An sqlite db filename found relateive
                                to target-base s3 bucket
      --existing-audio [SHA]  - default behavior is to pick a new
-                               random audio file. Set this parameter
-                               to a mp3 sha from audio.json
+                               random audio file.
     --genre           [str]  - Blues,Classical,Folk,Hip-Hop,Instrumental,
                                International,Jazz,Lo-fi,Old-Time__Historic,
                                Pop,Rock,Soul-RB (default: Hip-Hop)
@@ -109,7 +108,7 @@ FILENAME="${KEY}.mp4"
 LOCAL_FILENAME="${TARGET_DIR}/output/${FILENAME}"
 TARGET_FILENAME="videos/raw/${T_YEAR}_${T_MONTH}_${T_DAY}/${FILENAME}"
 PROCESSED_FILENAME=$(echo $TARGET_FILENAME | sed -e 's/raw/processed/g')
-AUDIO_REJECTED_FILENAME="audio_rejected.txt"
+AUDIO_REJECTED_FILENAME="audio/rejected.txt"
 
 SQLITE_EXISTS=$(aws s3 ls ${TARGET_BASE}/${SQLITE_DB})
 if [ -z "$SQLITE_EXISTS" ]; then
@@ -155,21 +154,22 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
   fi
   DURATION=$(get_duration_in_seconds $LOCAL_FILENAME)
   aws s3 cp $LOCAL_FILENAME ${TARGET_BASE}/${TARGET_FILENAME}
-
-  # # Save json file
-  # echo "{\"filename\":\"${TARGET_FILENAME}\",\"created\":${NOW},\"duration\":${DURATION}}" > ${TARGET_DIR}/${NAME}.json
-  # aws s3 cp ${TARGET_DIR}/${NAME}.json ${TARGET_BASE}/videos/raw/${T_YEAR}_${T_MONTH}_${T_DAY}/${NAME}.json
   
   # Save raw video meta-data
   put_raw_video ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timelapse.db ${KEY} ${TARGET_FILENAME} ${NOW} ${DURATION}
 else
   # There is a video file described in the raw table, download the processed video
   echo "Download mp4 file..."
-  aws s3 sync ${TARGET_BASE}/${TARGET_FILENAME} ${TARGET_DIR}/output/.
+  rm -rf ${TARGET_DIR}/output
+  mkdir -p ${TARGET_DIR}/output
+  aws s3 cp ${TARGET_BASE}/${TARGET_FILENAME} ${TARGET_DIR}/output/.
 fi
 
+
+
+
+
 # Either the mp4 was downloaded, or generated. Add Audio
-aws s3 cp ${TARGET_BASE}/${AUDIO_JSON_FILENAME} ${TARGET_DIR}/music/audio.json
 if [ -z "$EXISTING_AUDIO" ]; then
   FOUND_MUSIC=0
   touch ${TARGET_DIR}/music/new-rejects.txt
