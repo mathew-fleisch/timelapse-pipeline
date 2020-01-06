@@ -156,7 +156,7 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
   aws s3 cp $LOCAL_FILENAME ${TARGET_BASE}/${TARGET_FILENAME}
   
   # Save raw video meta-data
-  put_raw_video ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timelapse.db ${KEY} ${TARGET_FILENAME} ${NOW} ${DURATION}
+  put_raw_video ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timelapse.db "$KEY" "$TARGET_FILENAME" $NOW $DURATION
 else
   # There is a video file described in the raw table, download the processed video
   echo "Download mp4 file..."
@@ -185,24 +185,23 @@ if [ -z "$EXISTING_AUDIO" ]; then
       _jq() {
        echo ${row} | base64 --decode | jq -r ${1}
       }
-      THIS_ARTIST=$(_jq '.artist' | sed -e 's/"/\\"/g' | base64)
-      THIS_ALBUM=$(_jq '.artist' | sed -e 's/"/\\"/g' | base64)
-      THIS_GENRE=$(_jq '.genre' | sed -e 's/"/\\"/g' | base64)
-      MPTHREE_LINK=$(_jq '.mpthree')
-      THIS_MPTHREE=$(echo $MPTHREE_LINK | sed -e 's/"/\\"/g' | base64)
-      SONG_SHA=$(echo $MPTHREE_LINK | shasum | awk '{print $1}')
+      THIS_ARTIST=$(_jq '.artist')
+      THIS_ALBUM=$(_jq '.artist')
+      THIS_GENRE=$(_jq '.genre')
+      THIS_MPTHREE=$(_jq '.mpthree')
+      SONG_SHA=$(echo $THIS_MPTHREE | shasum | awk '{print $1}')
       ALREADY_REJECTED=$(cat ${TARGET_DIR}/music/rejected.txt | grep ${SONG_SHA})
       if [ -z "$ALREADY_REJECTED" ]; then
-        echo $(echo $THIS_ARTIST | base64 --decode)
-        echo $(echo $THIS_MPTHREE | base64 --decode)
+        echo "$THIS_ARTIST"
+        echo "$THIS_MPTHREE"
         echo "${SONG_SHA}.mp3"
-        curl -s $MPTHREE_LINK --output ${TARGET_DIR}/music/${SONG_SHA}.mp3
+        curl -s $THIS_MPTHREE --output ${TARGET_DIR}/music/${SONG_SHA}.mp3
         THIS_DURATION=$(get_duration_in_seconds ${TARGET_DIR}/music/${SONG_SHA}.mp3)
         echo "Duration: $THIS_DURATION ?> $SHORT_SONG_THRESHOLD"
         if [ $THIS_DURATION -gt $SHORT_SONG_THRESHOLD ]; then
           echo "This song should do!"
           let FOUND_MUSIC++
-          put_audio ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timelapse.db $SONG_SHA $THIS_ARTIST $THIS_ALBUM $THIS_GENRE $THIS_MPTHREE $THIS_DURATION
+          put_audio ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timelapse.db "$SONG_SHA" "$THIS_ARTIST" "$THIS_ALBUM" "$THIS_GENRE" "$THIS_MPTHREE" $THIS_DURATION
           aws s3 cp ${TARGET_DIR}/music/${SONG_SHA}.mp3 ${TARGET_BASE}/audio/${SONG_SHA}.mp3
           break
         else
@@ -210,7 +209,7 @@ if [ -z "$EXISTING_AUDIO" ]; then
         fi
       else
         echo "Already Rejected:"
-        echo "$MPTHREE_LINK"
+        echo "$THIS_MPTHREE"
       fi
     done
   done
@@ -236,7 +235,7 @@ aws s3 cp ${TARGET_DIR}/output/${KEY}_fade.mp4 ${TARGET_BASE}/${PROCESSED_FILENA
 
 NEW_DURATION=$(get_duration_in_seconds ${TARGET_DIR}/output/${KEY}_fade.mp4)
 # Save meta-data about processed video (key, name, filename, year, month, day, audio, created, duration)
-put_video ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timelapse.db $KEY $PROCESSED_FILENAME $T_YEAR $T_MONTH $T_DAY $SONG_SHA $NOW $NEW_DURATION
+put_video ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timelapse.db "$KEY" "$PROCESSED_FILENAME" $T_YEAR $T_MONTH $T_DAY "$SONG_SHA" $NOW $NEW_DURATION
 
 # Upload to youtube (could be separate step... perhaps... with testcafe... wtf)
 

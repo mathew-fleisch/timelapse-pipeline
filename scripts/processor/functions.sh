@@ -155,11 +155,6 @@ put_audio() {
     echo "must include a duration integer"
     exit 1
   fi
-  # These values are likely to have spaces, the base64 encode/decode removes them.
-  ARTIST=$(echo $4 | base64 --decode)
-  ALBUM=$(echo $5 | base64 --decode)
-  GENRE=$(echo $6 | base64 --decode)
-  MPTHREE=$(echo $7 | base64 --decode)
   # Delete any local dbs that may already exist
   if [ -f "$2" ]; then
     rm -rf "$2"
@@ -174,7 +169,7 @@ put_audio() {
   fi
 
   # Run query
-  sqlite3 $2 "insert into raw (sha, artist, album, genre, mpthree, duration) values (\"$3\", \"$ARTIST\", \"$ALBUM\", \"$GENRE\", \"$MPTHREE\", $8);"
+  sqlite3 $2 "insert into raw (sha, artist, album, genre, mpthree, duration) values (\"$3\", \"$4\", \"$5\", \"$6\", \"$7\", $8);"
 
   # Copy the sqlite db back to s3
   aws s3 cp $2 $1 --quiet
