@@ -30,7 +30,7 @@ jobs:
       - run:
           name: Make Timelapse
           command: |
-            git clone https://$EAZE_AUTOMATION_GITHUB_CREDENTIAL@github.com/mathew-fleisch/timelapse-pipeline.git
+            git clone https://$GITHUB_TOKEN@github.com/mathew-fleisch/timelapse-pipeline.git
             cd timelapse-pipeline
             mkdir -p files
             cd scripts/processor
@@ -56,6 +56,7 @@ workflows:
             branches:
               only: never-build-this-automatically
       - make_timelapse:
+          context: timelapse
           filters:
             branches:
               only: never-build-this-automatically
