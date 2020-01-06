@@ -283,8 +283,8 @@ put_video()  {
     echo "month: \"$7\""
     echo "day: \"$8\""
     echo "Audio Sha: \"$9\""
-    echo "Created Timestamp: $10"
-    echo "Duration: $11"
+    echo "Created Timestamp: ${10}"
+    echo "Duration: ${11}"
   fi
 
 
@@ -297,7 +297,7 @@ put_video()  {
   fi
 
   # Run query
-  sqlite3 $2 "insert into video (key, name, filename, year, month, day, audio, created, duration) values (\"$3\", \"$4\", \"$5\", $6, $7, $8, \"$9\", $10, $11);"
+  sqlite3 $2 "insert into video (key, name, filename, year, month, day, audio, created, duration) values (\"$3\", \"$4\", \"$5\", $6, $7, $8, \"$9\", ${10}, ${11});"
 
   # Copy the sqlite db back to s3
   aws s3 cp $2 $1 --quiet
