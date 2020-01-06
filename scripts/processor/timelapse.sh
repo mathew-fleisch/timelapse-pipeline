@@ -138,6 +138,7 @@ LAST=0
 DELETE=6
 TRACK=0
 MASTER_TRACK=0
+DELETE_TRACK=0
 TRACK_PERCENTAGE=-1
 
 if [ $DRY_RUN -eq 1 ] || [ $REMOVE_FLASHES -eq 1 ]; then
@@ -175,9 +176,10 @@ if [ $DRY_RUN -eq 1 ] || [ $REMOVE_FLASHES -eq 1 ]; then
       if [ "${TRACK}" -gt 0 ]; then
         if [ "${TRACK}" -lt "${DELETE}" ]; then
           DELETE_THIS="rm -rf $filename"
-          echo "DELETE THIS... ${DELETE_THIS}"
+          let DELETE_TRACK++
+          # echo "DELETE THIS... ${DELETE_THIS}"
           if [ $REMOVE_FLASHES -eq 1 ]; then
-            echo $($DELETE_THIS)
+            $($DELETE_THIS)
           else
             echo "skipping flash removal"
           fi
@@ -197,6 +199,7 @@ fi
 
 TOTAL_STAGED_DEFLASHED=$(find ${DESTAGE_DIR}/ -maxdepth 1 | wc -l)
 TOTAL_STAGED_DEFLASHED=$((TOTAL_STAGED_DEFLASHED - 1))
+echo "Deleted Frames: $DELETE_TRACK"
 echo "Raw footage seconds: $TOTAL_STAGED"
 echo "Raw footage: $(convertsecs $TOTAL_STAGED)"
 if [ $REMOVE_FLASHES -eq 1 ]; then
