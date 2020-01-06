@@ -29,6 +29,13 @@ jobs:
       - run:
           name: Make Timelapse
           command: |
+            echo 'export AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID"' >> $BASH_ENV
+            echo 'export AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY"' >> $BASH_ENV
+            echo 'export CIRCLE_TOKEN="$CIRCLE_TOKEN"' >> $BASH_ENV
+            echo 'export GITHUB_TOKEN="$GITHUB_TOKEN"' >> $BASH_ENV
+            echo 'export GITHUB_USER="$GITHUB_USER"' >> $BASH_ENV
+            echo 'export NPM_TOKEN="$NPM_TOKEN"' >> $BASH_ENV
+            echo 'export SLACK_TOKEN="$SLACK_TOKEN"' >> $BASH_ENV
             git clone https://$GITHUB_TOKEN@github.com/mathew-fleisch/timelapse-pipeline.git
             cd timelapse-pipeline
             TARGET_DIR=$(pwd)
