@@ -22,12 +22,12 @@ PERCENTAGE=$((MUSIC_LENGTH * 100000 / VIDEO_LENGTH))
 
 echo "Speed up footage to match audio length."
 FAST=$(echo $2 | sed -e 's/.mp4/_fast.mp4/g')
-ffmpeg -i $2 -filter:v "setpts=0.$PERCENTAGE*PTS" $FAST
+ffmpeg -hide_banner -loglevel panic -i $2 -filter:v "setpts=0.$PERCENTAGE*PTS" $FAST
 
 echo "Add audio: $1"
 AUDIO=$(echo $FAST | sed -e 's/_fast/_audio/g')
-ffmpeg -i $FAST -i $1 -c copy -map 0:v:0 -map 1:a:0 $AUDIO
+ffmpeg -hide_banner -loglevel panic -i $FAST -i $1 -c copy -map 0:v:0 -map 1:a:0 $AUDIO
 
 echo "Adding fade in/out"
 FADE=$(echo $AUDIO | sed -e 's/_audio/_fade/g')
-ffmpeg -i $AUDIO -filter:v "fade=in:st=0:d=2, fade=out:st=${VIDEO_FADE}:d=2" $FADE
+ffmpeg -hide_banner -loglevel panic -i $AUDIO -filter:v "fade=in:st=0:d=2, fade=out:st=${VIDEO_FADE}:d=2" $FADE

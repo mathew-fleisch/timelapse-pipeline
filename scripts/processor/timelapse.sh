@@ -215,7 +215,7 @@ if [ -f "$OUTPUT_DIR/${NAME}_${TARGET}.mp4" ]; then
 fi
 
 cd $DESTAGE_DIR
-ffmpeg -framerate 60 -pattern_type glob -i '*.jpg' -c:v libx265 -crf 25 "$OUTPUT_DIR/${NAME}_${TARGET}.mp4"
+ffmpeg -hide_banner -loglevel panic -framerate 60 -pattern_type glob -i '*.jpg' -c:v libx265 -crf 25 "$OUTPUT_DIR/${NAME}_${TARGET}.mp4"
 
 echo "Timelapse Created: $OUTPUT_DIR/${NAME}_${TARGET}.mp4"
 
