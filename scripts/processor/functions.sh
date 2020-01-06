@@ -17,6 +17,29 @@ convertsecs() {
   printf "%02d:%02d:%02d\n" $h $m $s
 }
 
+urlencode() {
+  # urlencode <string>
+  old_lc_collate=$LC_COLLATE
+  LC_COLLATE=C
+  
+  local length="${#1}"
+  for (( i = 0; i < length; i++ )); do
+    local c="${1:i:1}"
+    case $c in
+      [a-zA-Z0-9.~_-]) printf "$c" ;;
+      *) printf '%%%02X' "'$c" ;;
+    esac
+  done
+  
+  LC_COLLATE=$old_lc_collate
+}
+
+urldecode() {
+  # urldecode <string>
+
+  local url_encoded="${1//+/ }"
+  printf '%b' "${url_encoded//%/\\x}"
+}
 
 initialize_sqlite_db() {
   if [ -z "$1" ]; then
@@ -160,6 +183,23 @@ put_audio() {
     rm -rf "$2"
   fi
 
+  SHA=$(urlencode "$3")
+  ARTIST=$(urlencode "$4")
+  ALBUM=$(urlencode "$5")
+  GENRE=$(urlencode "$6")
+  MPTHREE=$(urlencode "$7")
+
+  if ! [ -z "$DEBUG" ]; then
+    echo "Remote: \"$1\""
+    echo "Local: \"$2\""
+    echo "Audio Sha: \"$SHA\""
+    echo "Artist: \"$ARTIST\""
+    echo "Album: \"$ALBUM\""
+    echo "Genre: \"$GENRE\""
+    echo "Mp3: \"$MPTHREE\""
+    echo "Duration: $8"
+  fi
+
   # Copy the sqlite db from s3
   aws s3 cp $1 $2 --quiet
 
@@ -169,7 +209,9 @@ put_audio() {
   fi
 
   # Run query
-  sqlite3 $2 "insert into raw (sha, artist, album, genre, mpthree, duration) values (\"$3\", \"$4\", \"$5\", \"$6\", \"$7\", $8);"
+  QUERY="insert into audio (sha, artist, album, genre, mpthree, duration) values (\"$SHA\", \"$ARTIST\", \"$ALBUM\", \"$GENRE\", \"$MPTHREE\", $8);"
+  echo "$QUERY"
+  sqlite3 $2 "$QUERY"
 
   # Copy the sqlite db back to s3
   aws s3 cp $2 $1 --quiet

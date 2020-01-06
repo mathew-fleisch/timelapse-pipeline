@@ -156,7 +156,7 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
   aws s3 cp $LOCAL_FILENAME ${TARGET_BASE}/${TARGET_FILENAME}
   
   # Save raw video meta-data
-  put_raw_video ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timelapse.db "$KEY" "$TARGET_FILENAME" $NOW $DURATION
+  put_raw_video ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timelapse.db "$KEY" "$TARGET_FILENAME" $NOW $Duration
 else
   # There is a video file described in the raw table, download the processed video
   echo "Download mp4 file..."
