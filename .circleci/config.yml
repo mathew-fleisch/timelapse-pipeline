@@ -21,17 +21,17 @@ jobs:
     steps:
       - run:
           name: Install dependencies
-          working_directory: /
           command: |
             sudo apt-get update
             sudo apt-get upgrade -y
-            apt-get install -y zip wget iputils-ping curl jq build-essential libssl-dev python python-pip python3 python3-pip file libgcrypt-dev git sudo build-essential libssl-dev awscli vim ffmpeg sqlite3
+            sudo apt-get install -y zip wget iputils-ping curl jq build-essential libssl-dev python python-pip python3 python3-pip file libgcrypt-dev git sudo build-essential libssl-dev awscli vim ffmpeg sqlite3
             pip3 install awscli --upgrade --user
       - run:
           name: Make Timelapse
           command: |
             git clone https://$GITHUB_TOKEN@github.com/mathew-fleisch/timelapse-pipeline.git
             cd timelapse-pipeline
+            TARGET_DIR=$(pwd)
             mkdir -p files
             cd scripts/processor
             if ! [ -f "start.sh" ]; then
@@ -42,7 +42,7 @@ jobs:
             echo "TARGET_DATE=$TARGET_DATE"
             echo "SOURCE_NAME=$SOURCE_NAME"
             echo "SOURCE_BASE=$SOURCE_BASE"
-            ./start.sh --name ${SOURCE_NAME} --target-date ${TARGET_DATE} --source-base ${SOURCE_BASE} --target-dir /usr/timelapse/files --remove-night 1 --target-base ss3://eaze-timelapse/pipeline --sqlite-db timelapse.db
+            ./start.sh --name ${SOURCE_NAME} --target-date ${TARGET_DATE} --source-base ${SOURCE_BASE} --target-dir ${TARGET_DIR}/files --remove-night 1 --target-base ss3://eaze-timelapse/pipeline --sqlite-db timelapse.db
 
 
 
