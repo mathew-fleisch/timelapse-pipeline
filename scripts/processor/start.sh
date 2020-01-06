@@ -146,7 +146,7 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
       CURRENT_HOUR=$x
     fi
     echo "Current hour: $CURRENT_HOUR"
-    aws s3 cp ${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${CURRENT_HOUR} ${TARGET_DIR}/stage/.
+    aws s3 cp ${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${CURRENT_HOUR} ${TARGET_DIR}/stage/. --recursive
   done
 
   # Pick arbitrary threshold of minimum frames
@@ -177,6 +177,7 @@ fi
 # Either the mp4 was downloaded, or generated. Add Audio
 if [ -z "$EXISTING_AUDIO" ]; then
   FOUND_MUSIC=0
+  mkdir -p ${TARGET_DIR}/music
   touch ${TARGET_DIR}/music/new-rejects.txt
   REJECTED=$(aws s3 cp ${TARGET_BASE}/${AUDIO_REJECTED_FILENAME} ${TARGET_DIR}/music/rejected.txt)
   while [ $FOUND_MUSIC -eq 0 ]; do
