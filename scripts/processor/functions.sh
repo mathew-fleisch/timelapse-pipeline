@@ -41,6 +41,14 @@ urldecode() {
   printf '%b' "${url_encoded//%/\\x}"
 }
 
+num_files() {
+  if [ -d "$1" ]; then
+    echo $(find ${1}/ -maxdepth 1 | wc -l)
+  else
+    echo "Error: Directory does not exist"
+  fi
+}
+
 initialize_sqlite_db() {
   if [ -z "$1" ]; then
     echo "must include s3 bucket+path+filename to store the db"
