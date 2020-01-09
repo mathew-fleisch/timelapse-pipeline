@@ -125,9 +125,11 @@ echo "Filename:  $FILENAME"
 echo "Source:    $SOURCE_BASE"
 echo "Target:    $TARGET_BASE"
 echo "Sqlite:    $SQLITE_DB"
-echo "Audio:     $EXISTING_AUDIO"
-echo "Genre:     $GENRE"
-echo "-------------------------------------------------------------"
+if [ -z "$EXISTING_AUDIO" ]; then
+  echo "Genre:     $GENRE"
+else
+  echo "Existing Audio: $EXISTING_AUDIO.mp3"
+fi
 ##########################################################################
 
 
@@ -145,17 +147,35 @@ RAW_VIDEO_EXISTS=$(get_raw_video ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timel
 # it exists, download it, otherwise download the
 # images, and build the timelapse using ffmpeg.
 if [ -z "$RAW_VIDEO_EXISTS" ]; then
+  ##########################################################################
   echo "-------------------------------------------------------------"
   echo "Video does not exist, Pull images down from s3, and generate it"
   echo "-------------------------------------------------------------"
+  ##########################################################################
   if [ -z "$SOURCE_BASE" ]; then
     echo "A source s3 bucket+path is required to run this section"
     exit 1
   fi
-  HAS_IMAGES=$(aws s3 ls ${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${CURRENT_HOUR})
-  if [ -z "$HAS_IMAGES" ]; then
-    echo "There are no images in this source bucket:"
-    echo "${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${CURRENT_HOUR}"
+
+  echo "Checking to see if source images exist..."
+  TOTAL_IMAGES_FOR_DAY=0
+  for (( x="$DEFAULT_START"; x<="$DEFAULT_END"; x++ )); do
+    if [[ "${x}" -lt 10 ]]; then
+      CURRENT_HOUR="0$x"
+    else
+      CURRENT_HOUR=$x
+    fi
+    echo "Current hour: $CURRENT_HOUR"
+
+    NUM_IMAGES=$(aws s3 ls ${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${CURRENT_HOUR}/ | wc -l)
+    if [ $NUM_IMAGES -eq 0 ]; then
+      echo "There are no images in this source bucket+path:"
+      echo "${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${CURRENT_HOUR}"
+    fi
+    TOTAL_IMAGES_FOR_DAY=$((TOTAL_IMAGES_FOR_DAY + NUM_IMAGES))
+  done
+  if [ $TOTAL_IMAGES_FOR_DAY -lt $MIN_IMAGES_THRESHOLD ]; then
+    echo "Error: Staged Images under threshold ($MIN_IMAGES_THRESHOLD)"
     exit 1
   fi
   rm -rf ${TARGET_DIR}/stage
@@ -174,9 +194,11 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
   done
 
   NUM_STAGED=$(num_files ${TARGET_DIR}/stage)
+  ##########################################################################
   echo "-------------------------------------------------------------"
   echo "Images to render: $NUM_STAGED (This process will take a while)"
   echo "-------------------------------------------------------------"
+  ##########################################################################
   if [ $NUM_STAGED -lt $MIN_IMAGES_THRESHOLD ]; then
     echo "Error: Staged Images under threshold ($MIN_IMAGES_THRESHOLD)"
     exit 1
@@ -196,9 +218,11 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
   put_raw_video ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timelapse.db "$KEY" "$TARGET_FILENAME" $NOW $DURATION
 else
   # There is a video file described in the raw table, download the processed video
+  ##########################################################################
   echo "-------------------------------------------------------------"
   echo "Video already exists in s3. Pull generated video from s3"
   echo "-------------------------------------------------------------"
+  ##########################################################################
   rm -rf ${TARGET_DIR}/output
   mkdir -p ${TARGET_DIR}/output
   aws s3 cp ${TARGET_BASE}/${TARGET_FILENAME} ${TARGET_DIR}/output/.
@@ -212,6 +236,7 @@ fi
 
 # Either the mp4 was downloaded, or generated. Add Audio
 if [ -z "$EXISTING_AUDIO" ]; then
+  ##########################################################################
   echo "-------------------------------------------------------------"
   echo "Get random mp3 from FreeMediaArchive.org"
   FOUND_MUSIC=0
@@ -271,34 +296,41 @@ if [ -z "$EXISTING_AUDIO" ]; then
   # Push the new rejected mp3 shas to s3
   aws s3 cp ${TARGET_DIR}/music/rejected.txt ${TARGET_BASE}/${AUDIO_REJECTED_FILENAME}
 else
+  ##########################################################################
   echo "-------------------------------------------------------------"
   echo "Use existing mp3: $EXISTING_AUDIO"
   echo "-------------------------------------------------------------"
+  ##########################################################################
   SONG_SHA="$EXISTING_AUDIO"
   aws s3 cp ${TARGET_BASE}/audio/${SONG_SHA}.mp3 ${TARGET_DIR}/music/${SONG_SHA}.mp3
 fi
 
-
+##########################################################################
 echo "-------------------------------------------------------------"
 echo "Merge Audio & Video (This process will take a while)"
 echo "-------------------------------------------------------------"
+##########################################################################
 
 # Merge audio/video
 ./merge-audio-video.sh ${TARGET_DIR}/music/${SONG_SHA}.mp3 ${TARGET_DIR}/output/${FILENAME}
 
 
 NEW_DURATION=$(get_duration_in_seconds ${TARGET_DIR}/output/${KEY}_fade.mp4)
+##########################################################################
 echo "-------------------------------------------------------------"
 echo "Upload processed video to s3: $(convertsecs $NEW_DURATION)"
 echo "-------------------------------------------------------------"
+##########################################################################
 
 # Upload to s3
 aws s3 cp ${TARGET_DIR}/output/${KEY}_fade.mp4 ${TARGET_BASE}/${PROCESSED_FILENAME}
 
 
+##########################################################################
 echo "-------------------------------------------------------------"
 echo "Save meta-data to sqlite and upload db to s3"
 echo "-------------------------------------------------------------"
+##########################################################################
 
 # Save meta-data about processed video (key, name, filename, year, month, day, audio, created, duration)
 put_video ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timelapse.db "$KEY" "$NAME" "$PROCESSED_FILENAME" $T_YEAR $T_MONTH $T_DAY "$SONG_SHA" $NOW $NEW_DURATION
@@ -311,7 +343,9 @@ put_video ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timelapse.db "$KEY" "$NAME" 
 ENDED=$(date +%s)
 FINISHED=$((ENDED-NOW))
 runtime=$(convertsecs $FINISHED)
+##########################################################################
 echo "-------------------------------------------------------------"
 echo "Timelapse Processing Time: $runtime"
 echo "-------------------------------------------------------------"
+##########################################################################
 
