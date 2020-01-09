@@ -265,9 +265,10 @@ if [ -z "$EXISTING_AUDIO" ]; then
       SONG_SHA=$(echo $THIS_MPTHREE | shasum | awk '{print $1}')
       ALREADY_REJECTED=$(cat ${TARGET_DIR}/music/rejected.txt | grep ${SONG_SHA})
       if [ -z "$ALREADY_REJECTED" ]; then
-        echo "$THIS_ARTIST"
-        echo "$THIS_MPTHREE"
-        echo "${SONG_SHA}.mp3"
+        echo "Artist: $THIS_ARTIST"
+        echo "MP3:    $THIS_MPTHREE"
+        echo "SHA:    ${SONG_SHA}.mp3"
+        echo "Backup: https://eaze-timelapse.s3.amazonaws.com/pipeline/audio/${SONG_SHA}.mp3" 
         curl -s $THIS_MPTHREE --output ${TARGET_DIR}/music/${SONG_SHA}.mp3
         THIS_DURATION=$(get_duration_in_seconds ${TARGET_DIR}/music/${SONG_SHA}.mp3)
         echo "Duration: $THIS_DURATION ?> $SHORT_SONG_THRESHOLD"
