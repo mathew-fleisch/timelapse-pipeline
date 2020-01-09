@@ -46,7 +46,7 @@ MIN_IMAGES_THRESHOLD=5000
 SHORT_SONG_THRESHOLD=150
 DEFAULT_START=0
 DEFAULT_END=23
-GENRE="Hip-Hop"
+GENRE="Lo-fi"
 while [[ $# -gt 0 ]] && [[ "$1" == "--"* ]]; do
   opt="$1";
   shift;
