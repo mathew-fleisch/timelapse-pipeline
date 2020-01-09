@@ -165,14 +165,17 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
     else
       CURRENT_HOUR=$x
     fi
-    echo "Current hour: $CURRENT_HOUR"
-
     NUM_IMAGES=$(aws s3 ls ${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${CURRENT_HOUR}/ | wc -l)
     if [ $NUM_IMAGES -eq 0 ]; then
       echo "There are no images in this source bucket+path:"
-      echo "${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${CURRENT_HOUR}"
+      tmp=$(urlencode "${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${CURRENT_HOUR}")
+      echo "$tmp"
     fi
+    echo "$CURRENT_HOUR:00 - $NUM_IMAGES"
     TOTAL_IMAGES_FOR_DAY=$((TOTAL_IMAGES_FOR_DAY + NUM_IMAGES))
+
+    # Debug
+    aws s3 ls ${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${CURRENT_HOUR}/
   done
   if [ $TOTAL_IMAGES_FOR_DAY -lt $MIN_IMAGES_THRESHOLD ]; then
     echo "Error: Staged Images under threshold ($MIN_IMAGES_THRESHOLD)"
