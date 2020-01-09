@@ -98,6 +98,11 @@ DAY=$(date '+%d' -d "${TARGET_DATE}" )
 TARGET="${YEAR}_${MONTH}_${DAY}"
 TOTAL=0
 
+echo "=================================================="
+echo "Making timelapse for the day of $YEAR/$MONTH/$DAY"
+echo "=================================================="
+echo "Copy images from each hour, to a staging directory..."
+
 # Staged images are expected to be saved in folders
 # by hour. This section copies the images from those
 # directories into a "destaged" directory
@@ -123,11 +128,13 @@ if [ $DRY_RUN -eq 1 ] || [ $COPY_STAGED -eq 1 ]; then
     fi
   done
 else
-  echo "Skipping copy stage step."
+  echo "Skipping copy stage step... Files must already exist ¯\_(ツ)_/¯"
 fi
 
 TOTAL_STAGED=$(find ${DESTAGE_DIR}/ -maxdepth 1 | wc -l)
 TOTAL_STAGED=$((TOTAL_STAGED - 1))
+echo "There are $TOTAL_STAGED staged images"
+echo "=================================================="
 # echo "Does the copied images count [$TOTAL] == staged images count [$TOTAL_STAGED]"
 
 # When the camera first starts, or restarts the auto-white-balance feature
@@ -142,6 +149,7 @@ DELETE_TRACK=0
 TRACK_PERCENTAGE=-1
 
 if [ $DRY_RUN -eq 1 ] || [ $REMOVE_FLASHES -eq 1 ]; then
+  echo "Removing flash frames by gap detection... be patient."
   for filename in ${DESTAGE_DIR}/*.jpg; do
     let MASTER_TRACK++
     # echo $filename
@@ -192,7 +200,7 @@ if [ $DRY_RUN -eq 1 ] || [ $REMOVE_FLASHES -eq 1 ]; then
     fi
   done
 else
-  echo "skipping flash removal."
+  echo "skipping flash frame removal."
 fi
 
 
@@ -213,9 +221,11 @@ if [ -f "$OUTPUT_DIR/${NAME}_${TARGET}.mp4" ]; then
   echo "$OUTPUT_DIR/${NAME}_${TARGET}.mp4"
   exit 1
 fi
-
+echo "=================================================="
+echo "Running ffmpeg: Convert images in staged directory to mp4 at 60fps"
 cd $DESTAGE_DIR
 ffmpeg -hide_banner -loglevel panic -framerate 60 -pattern_type glob -i '*.jpg' -c:v libx265 -crf 25 "$OUTPUT_DIR/${NAME}_${TARGET}.mp4"
+echo "=================================================="
 
 echo "Timelapse Created: $OUTPUT_DIR/${NAME}_${TARGET}.mp4"
 
