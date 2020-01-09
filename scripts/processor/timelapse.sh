@@ -155,7 +155,7 @@ if [ $DRY_RUN -eq 1 ] || [ $REMOVE_FLASHES -eq 1 ]; then
     # echo $filename
     PERCENT_COMPLETE=$(awk "BEGIN { pc=100*${MASTER_TRACK}/${TOTAL_STAGED}; i=int(pc); print (pc-i<0.5)?i:i+1 }")
     if [ "$PERCENT_COMPLETE" -ne "$TRACK_PERCENTAGE" ]; then
-      echo "Percent complete: ${PERCENT_COMPLETE}%"
+      echo "Flash Frame Removal Progress: ${PERCENT_COMPLETE}%"
     fi
     TRACK_PERCENTAGE="$PERCENT_COMPLETE"
     str=$(echo $filename | sed -e 's/\.jpg//g' | sed -e 's/^.*\///g')

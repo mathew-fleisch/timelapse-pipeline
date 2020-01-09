@@ -110,6 +110,10 @@ if [ -z "$SQLITE_DB" ]; then
   exit 1
 fi
 
+BUCKET_PUBLIC_NAME=$(echo $TARGET_BASE | awk -F\/ '{print $3}')
+BUCKET_PUBLIC_PATH=$(echo $TARGET_BASE | sed 's/^.*'$BUCKET_PUBLIC_NAME'\///g')
+BUCKET_PUBLIC_URL="https://$BUCKET_PUBLIC_NAME.s3.amazonaws.com/$BUCKET_PUBLIC_PATH"
+
 NOW=$(date +%s)
 KEY="${NAME}_${T_YEAR}_${T_MONTH}_${T_DAY}"
 FILENAME="${KEY}.mp4"
@@ -268,7 +272,7 @@ if [ -z "$EXISTING_AUDIO" ]; then
         echo "Artist: $THIS_ARTIST"
         echo "MP3:    $THIS_MPTHREE"
         echo "SHA:    ${SONG_SHA}.mp3"
-        echo "Backup: https://eaze-timelapse.s3.amazonaws.com/pipeline/audio/${SONG_SHA}.mp3" 
+        echo "Backup: ${BUCKET_PUBLIC_URL}/audio/${SONG_SHA}.mp3" 
         curl -s $THIS_MPTHREE --output ${TARGET_DIR}/music/${SONG_SHA}.mp3
         THIS_DURATION=$(get_duration_in_seconds ${TARGET_DIR}/music/${SONG_SHA}.mp3)
         echo "Duration: $THIS_DURATION ?> $SHORT_SONG_THRESHOLD"
@@ -346,7 +350,9 @@ FINISHED=$((ENDED-NOW))
 runtime=$(convertsecs $FINISHED)
 ##########################################################################
 echo "-------------------------------------------------------------"
+echo "Processing Complete!!!"
 echo "Timelapse Processing Time: $runtime"
+echo "Video: ${BUCKET_PUBLIC_URL}/${PROCESSED_FILENAME}" 
 echo "-------------------------------------------------------------"
 ##########################################################################
 
