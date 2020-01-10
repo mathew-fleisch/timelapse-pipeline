@@ -71,6 +71,30 @@ initialize_sqlite_db() {
 
 # Raw Video Sqlite
 # create table raw (key TEXT PRIMARY KEY, filename TEXT, created INTEGER, duration INTERGER)
+get_raw_keys() {
+  if [ -z "$1" ]; then
+    echo "must include s3 bucket+path+filename to store the db"
+    exit 1
+  fi
+  if [ -z "$2" ]; then
+    echo "must include local file to store the db"
+    exit 1
+  fi
+  # Delete any local dbs that may already exist
+  if [ -f "$2" ]; then
+    rm -rf "$2"
+  fi
+
+  # Copy the sqlite db from s3
+  aws s3 cp $1 $2 --quiet
+  
+  if ! [ -f "$2" ]; then
+    echo "error pulling sqlite db from s3..."
+    exit 1
+  fi
+
+  sqlite3 $2 "select key from raw;"
+}
 get_raw_video() {
   if [ -z "$1" ]; then
     echo "must include s3 bucket+path+filename to store the db"
@@ -153,6 +177,59 @@ put_raw_video() {
 
 # Audio Sqlite
 # create table audio (sha TEXT PRIMARY KEY, artist TEXT, album TEXT, genre TEXT, mpthree TEXT, duration INTERGER);
+
+get_audio_keys() {
+  if [ -z "$1" ]; then
+    echo "must include s3 bucket+path+filename to store the db"
+    exit 1
+  fi
+  if [ -z "$2" ]; then
+    echo "must include local file to store the db"
+    exit 1
+  fi
+  # Delete any local dbs that may already exist
+  if [ -f "$2" ]; then
+    rm -rf "$2"
+  fi
+
+  # Copy the sqlite db from s3
+  aws s3 cp $1 $2 --quiet
+  
+  if ! [ -f "$2" ]; then
+    echo "error pulling sqlite db from s3..."
+    exit 1
+  fi
+
+  sqlite3 $2 "select sha from audio;"
+}
+get_audio() {
+  if [ -z "$1" ]; then
+    echo "must include s3 bucket+path+filename to store the db"
+    exit 1
+  fi
+  if [ -z "$2" ]; then
+    echo "must include local file to store the db"
+    exit 1
+  fi
+  if [ -z "$3" ]; then
+    echo "must include a key to query"
+    exit 1
+  fi
+  # Delete any local dbs that may already exist
+  if [ -f "$2" ]; then
+    rm -rf "$2"
+  fi
+
+  # Copy the sqlite db from s3
+  aws s3 cp $1 $2 --quiet
+  
+  if ! [ -f "$2" ]; then
+    echo "error pulling sqlite db from s3..."
+    exit 1
+  fi
+
+  sqlite3 $2 "select * from audio where sha = \"$3\";"
+}
 put_audio() {
   if [ -z "$1" ]; then
     echo "must include s3 bucket+path+filename to store the db"
@@ -230,6 +307,59 @@ put_audio() {
 
 # Video Sqlite
 # create table video (key TEXT PRIMARY KEY, name TEXT, filename TEXT, year INTEGER, month INTEGER, day INTEGER, audio TEXT, created INTEGER, duration INTERGER);
+
+get_processed_keys() {
+  if [ -z "$1" ]; then
+    echo "must include s3 bucket+path+filename to store the db"
+    exit 1
+  fi
+  if [ -z "$2" ]; then
+    echo "must include local file to store the db"
+    exit 1
+  fi
+  # Delete any local dbs that may already exist
+  if [ -f "$2" ]; then
+    rm -rf "$2"
+  fi
+
+  # Copy the sqlite db from s3
+  aws s3 cp $1 $2 --quiet
+  
+  if ! [ -f "$2" ]; then
+    echo "error pulling sqlite db from s3..."
+    exit 1
+  fi
+
+  sqlite3 $2 "select key from video;"
+}
+get_processed_video() {
+  if [ -z "$1" ]; then
+    echo "must include s3 bucket+path+filename to store the db"
+    exit 1
+  fi
+  if [ -z "$2" ]; then
+    echo "must include local file to store the db"
+    exit 1
+  fi
+  if [ -z "$3" ]; then
+    echo "must include a key to query the db by (NAME_YYYY_MM_DD)"
+    exit 1
+  fi
+  # Delete any local dbs that may already exist
+  if [ -f "$2" ]; then
+    rm -rf "$2"
+  fi
+
+  # Copy the sqlite db from s3
+  aws s3 cp $1 $2 --quiet
+  
+  if ! [ -f "$2" ]; then
+    echo "error pulling sqlite db from s3..."
+    exit 1
+  fi
+
+  sqlite3 $2 "select * from video where key = \"$3\";"
+}
 put_video()  {
   if [ -z "$1" ]; then
     echo "must include s3 bucket+path+filename to store the db"
