@@ -24,21 +24,24 @@ solution.
 *** - Required parameter
 Usage: ./start.sh [arguments]
 
-    *** --name        [str]  - Name of camera/timelapse
-    *** --target-date [date] - Date of timelapse
-    *** --target-dir  [path] - A directory where images and
-                               videos can be stored
-    *** --source-base [path] - An s3 bucket, containing timelapse
-                               images. 
-    *** --target-base [path] - An s3 bucket, to store processed
-                               images, audio files and their meta-data
-  *** --sqlite-db [filename] - An sqlite db filename found relateive
-                               to target-base s3 bucket
-     --existing-audio [SHA]  - default behavior is to pick a new
-                               random audio file.
-    --genre           [str]  - Blues,Classical,Folk,Hip-Hop,Instrumental,
-                               International,Jazz,Lo-fi,Old-Time__Historic,
-                               Pop,Rock,Soul-RB (default: Hip-Hop)
+     *** --name        [str]  - Name of camera/timelapse
+     *** --target-date [date] - Date of timelapse
+     *** --target-dir  [path] - A directory where images and
+                                videos can be stored
+     *** --source-base [path] - An s3 bucket, containing timelapse
+                                images. 
+     *** --target-base [path] - An s3 bucket, to store processed
+                                images, audio files and their meta-data
+   *** --sqlite-db [filename] - An sqlite db filename found relateive
+                                to target-base s3 bucket
+      --existing-audio [SHA]  - default behavior is to pick a new
+                                random audio file.
+     --genre           [str]  - Blues,Classical,Folk,Hip-Hop,Instrumental,
+                                International,Jazz,Lo-fi,Old-Time__Historic,
+                                Pop,Rock,Soul-RB (default: Hip-Hop)
+ --slack-channel [channel-id] - Optional channel id to report completed timelapse/url
+      --slack-token   [token]   - Required token if --slack-channel is set 
+
 EOF
 
 
@@ -75,6 +78,10 @@ while [[ $# -gt 0 ]] && [[ "$1" == "--"* ]]; do
          DEFAULT_END=21; shift;;
       "--genre" )
          GENRE="$1"; shift;;
+      "--slack-channel" )
+         SLACK_CHANNEL_ID="$1"; shift;;
+      "--slack-token" )
+         SLACK_TOKEN="$1"; shift;;
       *) echo >&2 "Invalid option: $@"; exit 1;;
   esac
 done
@@ -356,3 +363,12 @@ echo "Video: ${BUCKET_PUBLIC_URL}/${PROCESSED_FILENAME}"
 echo "-------------------------------------------------------------"
 ##########################################################################
 
+
+if ! [ -z "$SLACK_CHANNEL_ID" ]; then
+  if [ -z "$SLACK_TOKEN" ]; then
+    echo "Slack Token is required to run this action."
+    exit 0
+  else
+    slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "Timelapse Complete: ${BUCKET_PUBLIC_URL}/${PROCESSED_FILENAME}"
+  fi
+fi

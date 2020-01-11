@@ -48,7 +48,25 @@ num_files() {
     echo "Error: Directory does not exist"
   fi
 }
-
+slack_message() {
+  if [ -z "$1" ]; then
+    echo "Must include slack api token"
+    exit 1
+  fi
+  if [ -z "$2" ]; then
+    echo "Must include a channel id"
+    exit 1
+  fi
+  if [ -z "$3" ]; then
+    echo "Must include message to send"
+    exit 1
+  fi
+  T_SLACK_TOKEN="$1"
+  T_CHANNEL="$2"
+  T_MESSAGE="$3"
+  T_DATA="{\"token\":\"$T_SLACK_TOKEN\",\"channel\":\"$T_CHANNEL\",\"text\":\"$T_MESSAGE\"}"
+  curl -s -X POST -H 'Content-type: application/json' --data "$T_DATA" https://slack.com/api/chat.postMessage
+}
 initialize_sqlite_db() {
   if [ -z "$1" ]; then
     echo "must include s3 bucket+path+filename to store the db"
