@@ -57,7 +57,7 @@ jobs:
                 T_SLACK_CALLBACK="--slack-token ${SLACK_TOKEN} --slack-channel ${TRIGGERED_CHANNEL_ID}"
               fi
             fi
-
+            echo "T_SLACK_CALLBACK=$T_SLACK_CALLBACK"
             if 
             if [ -z "$EXISTING_AUDIO" ]; then
               ./start.sh --name ${SOURCE_NAME} --target-date ${TARGET_DATE} --source-base ${SOURCE_BASE} --target-dir ${TARGET_DIR}/files --remove-night 1 --target-base s3://eaze-timelapse/pipeline --sqlite-db timelapse.db ${T_SLACK_CALLBACK}
