@@ -141,6 +141,9 @@ if [ -z "$EXISTING_AUDIO" ]; then
 else
   echo "Existing Audio: $EXISTING_AUDIO.mp3"
 fi
+if ! [ -z "$SLACK_CHANNEL_ID" ]; then
+  echo "Slack:     $SLACK_CHANNEL_ID"
+fi
 ##########################################################################
 
 
@@ -369,6 +372,6 @@ if ! [ -z "$SLACK_CHANNEL_ID" ]; then
     echo "Slack Token is required to run this action."
     exit 0
   else
-    slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "Timelapse Complete: ${BUCKET_PUBLIC_URL}/${PROCESSED_FILENAME}"
+    slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "Timelapse Complete: ${BUCKET_PUBLIC_URL}/${PROCESSED_FILENAME}  "
   fi
 fi
