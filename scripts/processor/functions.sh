@@ -64,7 +64,7 @@ slack_message() {
   T_SLACK_TOKEN="$1"
   T_CHANNEL="$2"
   T_MESSAGE="$3"
-  T_DATA="{\"token\":\"$T_SLACK_TOKEN\",\"channel\":\"$T_CHANNEL\",\"text\":\"$T_MESSAGE\"}"
+  T_DATA='{"token":"'$T_SLACK_TOKEN'","channel":"'$T_CHANNEL'","text":"'$T_MESSAGE'"}'
   curl -s -X POST -H 'Content-type: application/json' --data "$T_DATA" https://slack.com/api/chat.postMessage
 }
 initialize_sqlite_db() {

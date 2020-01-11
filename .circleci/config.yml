@@ -50,11 +50,11 @@ jobs:
             echo "TARGET_DATE=$TARGET_DATE"
             echo "SOURCE_NAME=$SOURCE_NAME"
             echo "SOURCE_BASE=$SOURCE_BASE"
-            T_SLACK_CALLBACK=""
-            if ! [ -z "$TRIGGERED_CHANNEL_ID" ];  then
+            T_SLACK_CALLBACK=''
+            if ! [ -z "$TRIGGERED_CHANNEL_ID" ]; then
               echo "Slack Callback: $TRIGGERED_CHANNEL_ID"
-              if ! [ -z "$SLACK_TOKEN" ];  then
-                T_SLACK_CALLBACK='--slack-token "'$SLACK_TOKEN'" --slack-channel "'$TRIGGERED_CHANNEL_ID'"'
+              if ! [ -z "$SLACK_TOKEN" ]; then
+                T_SLACK_CALLBACK="--slack-token $SLACK_TOKEN --slack-channel $TRIGGERED_CHANNEL_ID"
               fi
             fi
 
