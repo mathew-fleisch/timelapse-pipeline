@@ -91,7 +91,7 @@ jobs:
               echo "Missing start.sh script"
               exit 1
             fi
-            echo "Make Timelapse..."
+            echo "Make Timelapse (Callback)..."
             echo "TARGET_DATE=$TARGET_DATE"
             echo "SOURCE_NAME=$SOURCE_NAME"
             echo "SOURCE_BASE=$SOURCE_BASE"
