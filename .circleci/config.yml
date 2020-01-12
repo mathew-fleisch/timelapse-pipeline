@@ -46,51 +46,6 @@ jobs:
               echo "Missing start.sh script"
               exit 1
             fi
-            echo "Make Timelapse..."
-            echo "TARGET_DATE=$TARGET_DATE"
-            echo "SOURCE_NAME=$SOURCE_NAME"
-            echo "SOURCE_BASE=$SOURCE_BASE"
-            if [ -z "$EXISTING_AUDIO" ]; then
-              ./start.sh --name ${SOURCE_NAME} --target-date ${TARGET_DATE} --source-base ${SOURCE_BASE} --target-dir ${TARGET_DIR}/files --remove-night 1 --target-base s3://eaze-timelapse/pipeline --sqlite-db timelapse.db
-            else
-              ./start.sh --name ${SOURCE_NAME} --target-date ${TARGET_DATE} --source-base ${SOURCE_BASE} --target-dir ${TARGET_DIR}/files --remove-night 1 --existing-audio ${EXISTING_AUDIO} --target-base s3://eaze-timelapse/pipeline --sqlite-db timelapse.db
-            fi
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  make_timelapse_callback:
-    docker:
-      - image: circleci/python:3.7.3
-
-    working_directory: ~/
-    steps:
-      - run:
-          name: Install dependencies
-          command: |
-            sudo apt-get update
-            sudo apt-get upgrade -y
-            sudo apt-get install -y zip wget iputils-ping curl jq build-essential libssl-dev python python-pip python3 python3-pip file libgcrypt-dev git sudo build-essential libssl-dev awscli vim ffmpeg sqlite3
-            pip3 install awscli --upgrade --user
-      - run:
-          name: Make Timelapse
-          no_output_timeout: 60m
-          command: |
-            echo 'export AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID"' >> $BASH_ENV
-            echo 'export AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY"' >> $BASH_ENV
-            echo 'export CIRCLE_TOKEN="$CIRCLE_TOKEN"' >> $BASH_ENV
-            echo 'export GITHUB_TOKEN="$GITHUB_TOKEN"' >> $BASH_ENV
-            echo 'export GITHUB_USER="$GITHUB_USER"' >> $BASH_ENV
-            echo 'export NPM_TOKEN="$NPM_TOKEN"' >> $BASH_ENV
-            echo 'export SLACK_TOKEN="$SLACK_TOKEN"' >> $BASH_ENV
-            git clone https://$GITHUB_TOKEN@github.com/mathew-fleisch/timelapse-pipeline.git
-            cd timelapse-pipeline
-            TARGET_DIR=$(pwd)
-            mkdir -p files
-            cd scripts/processor
-            if ! [ -f "start.sh" ]; then
-              echo "Missing start.sh script"
-              exit 1
-            fi
             echo "Make Timelapse (Callback)..."
             echo "TARGET_DATE=$TARGET_DATE"
             echo "SOURCE_NAME=$SOURCE_NAME"
@@ -128,11 +83,6 @@ workflows:
             branches:
               only: never-build-this-automatically
       - make_timelapse:
-          context: timelapse
-          filters:
-            branches:
-              only: never-build-this-automatically
-      - make_timelapse_callback:
           context: timelapse
           filters:
             branches:
