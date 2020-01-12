@@ -170,7 +170,14 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
     echo "A source s3 bucket+path is required to run this section"
     exit 1
   fi
-
+  if ! [ -z "$SLACK_CHANNEL_ID" ]; then
+    if [ -z "$SLACK_TOKEN" ]; then
+      echo "Slack Token is required to run this action."
+      exit 0
+    else
+      slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "Pulling images down from s3 for ${T_YEAR}/${T_MONTH}/${T_DAY}"
+    fi
+  fi
   echo "Checking to see if source images exist..."
   TOTAL_IMAGES_FOR_DAY=0
   for (( x="$DEFAULT_START"; x<="$DEFAULT_END"; x++ )); do
@@ -217,6 +224,15 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
     echo "Error: Staged Images under threshold ($MIN_IMAGES_THRESHOLD)"
     exit 1
   fi
+
+  if ! [ -z "$SLACK_CHANNEL_ID" ]; then
+    if [ -z "$SLACK_TOKEN" ]; then
+      echo "Slack Token is required to run this action."
+      exit 0
+    else
+      slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "Starting ffmpeg ${T_YEAR}/${T_MONTH}/${T_DAY}"
+    fi
+  fi
   # Pick arbitrary threshold of minimum frames
   # to create a timelapse. avg ~ 60k frames
   ./timelapse.sh --target-date $TARGET_DATE --stage-dir $TARGET_DIR --remove-flashes 1 --name $NAME
@@ -252,6 +268,15 @@ fi
 if [ -z "$EXISTING_AUDIO" ]; then
   ##########################################################################
   echo "-------------------------------------------------------------"
+
+  if ! [ -z "$SLACK_CHANNEL_ID" ]; then
+    if [ -z "$SLACK_TOKEN" ]; then
+      echo "Slack Token is required to run this action."
+      exit 0
+    else
+      slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "Get music for ${T_YEAR}/${T_MONTH}/${T_DAY}"
+    fi
+  fi
   echo "Get random mp3 from FreeMediaArchive.org"
   FOUND_MUSIC=0
   mkdir -p ${TARGET_DIR}/music
@@ -320,11 +345,20 @@ else
   aws s3 cp ${TARGET_BASE}/audio/${SONG_SHA}.mp3 ${TARGET_DIR}/music/${SONG_SHA}.mp3
 fi
 
+if ! [ -z "$SLACK_CHANNEL_ID" ]; then
+  if [ -z "$SLACK_TOKEN" ]; then
+    echo "Slack Token is required to run this action."
+    exit 0
+  else
+    slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "Music for ${T_YEAR}/${T_MONTH}/${T_DAY}: ${BUCKET_PUBLIC_URL}/music/${SONG_SHA}.mp3 \nMerging with timelapse"
+  fi
+fi
 ##########################################################################
 echo "-------------------------------------------------------------"
 echo "Merge Audio & Video (This process will take a while)"
 echo "-------------------------------------------------------------"
 ##########################################################################
+
 
 # Merge audio/video
 ./merge-audio-video.sh ${TARGET_DIR}/music/${SONG_SHA}.mp3 ${TARGET_DIR}/output/${FILENAME}
@@ -372,6 +406,6 @@ if ! [ -z "$SLACK_CHANNEL_ID" ]; then
     echo "Slack Token is required to run this action."
     exit 0
   else
-    slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "Timelapse Complete: ${BUCKET_PUBLIC_URL}/${PROCESSED_FILENAME}"
+    slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "Timelapse Complete [${runtime}]: ${BUCKET_PUBLIC_URL}/${PROCESSED_FILENAME}"
   fi
 fi
