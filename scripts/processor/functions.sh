@@ -64,8 +64,14 @@ slack_message() {
   T_SLACK_TOKEN="$1"
   T_CHANNEL="$2"
   T_MESSAGE="$3"
-  T_DATA='{"token":"'$T_SLACK_TOKEN'","channel":"'$T_CHANNEL'","text":"'$T_MESSAGE'"}'
-  curl -s -X POST -H 'Content-type: application/json' -H 'Authorization: Bearer ${T_SLACK_TOKEN}' --data "$T_DATA" https://slack.com/api/chat.postMessage
+  # T_DATA='{"token":"'$T_SLACK_TOKEN'","channel":"'$T_CHANNEL'","text":"'$T_MESSAGE'"}'
+  # 7/15
+  # T_DATA='{"channel":"'$T_CHANNEL'","text":"'$T_MESSAGE'"}'
+  # curl -s -X POST -H 'Content-type: application/json' -H 'Authorization: Bearer ${T_SLACK_TOKEN}' --data "$T_DATA" https://slack.com/api/chat.postMessage
+
+  # If that doesn't work, pass the token in the url...
+  T_DATA='{"channel":"'$T_CHANNEL'","text":"'$T_MESSAGE'"}'
+  curl -s -X POST -H 'Content-type: application/json' -H 'Authorization: Bearer ${T_SLACK_TOKEN}' --data "$T_DATA" https://slack.com/api/chat.postMessage?token=${T_SLACK_TOKEN}
 }
 initialize_sqlite_db() {
   if [ -z "$1" ]; then
