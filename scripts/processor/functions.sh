@@ -63,8 +63,8 @@ slack_message() {
   fi
   T_SLACK_TOKEN="$1"
   T_CHANNEL="$2"
-  T_MESSAGE=$(echo $3 | sed -e 's/\s/+/g') 
-  T_MESSAGE=$(urlencode $T_MESSAGE)
+  # T_MESSAGE=$(echo $3 | sed -e 's/\s/+/g') 
+  T_MESSAGE=$(urlencode $3)
   
   curl -s -X POST https://slack.com/api/chat.postMessage?token=${T_SLACK_TOKEN}\&channel=${T_CHANNEL}\&text=${T_MESSAGE}
 }
