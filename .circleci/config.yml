@@ -50,7 +50,6 @@ jobs:
             echo "TARGET_DATE=$TARGET_DATE"
             echo "SOURCE_NAME=$SOURCE_NAME"
             echo "SOURCE_BASE=$SOURCE_BASE"
-            echo "T_SLACK_CALLBACK=$T_SLACK_CALLBACK"
             if [ -z "$EXISTING_AUDIO" ]; then
               if ! [ -z "$TRIGGERED_CHANNEL_ID" ]; then
                 echo "Slack Callback: $TRIGGERED_CHANNEL_ID"
