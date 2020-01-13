@@ -87,7 +87,7 @@ slack_message_ephemeral() {
   T_CHANNEL="$2"
   T_USER="$3"
   T_MESSAGE="$4"
-  curl -X POST -H 'Authorization: Bearer '${T_SLACK_TOKEN} -H 'Content-type: application/json; charset=utf-8' --data "{\"channel\":\"${T_CHANNEL}\",\"text\":\"${T_MESSAGE}\"}" https://slack.com/api/chat.postEphemeral
+  curl -X POST -H 'Authorization: Bearer '${T_SLACK_TOKEN} -H 'Content-type: application/json; charset=utf-8' --data "{\"channel\":\"${T_CHANNEL}\",\"text\":\"${T_MESSAGE}\",\"user\":\"${T_USER}\"}" https://slack.com/api/chat.postEphemeral
 }
 initialize_sqlite_db() {
   if [ -z "$1" ]; then
