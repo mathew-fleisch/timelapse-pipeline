@@ -414,6 +414,11 @@ if ! [ -z "$SLACK_CHANNEL_ID" ]; then
     echo "Slack Token is required to run this action."
     exit 0
   else
-    slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "Timelapse Complete [${runtime}]: ${BUCKET_PUBLIC_URL}/${PROCESSED_FILENAME}"
+    MSG_RUNTIME="Timelapse Complete:  ${runtime}"
+    MSG_PROCURL="Processed Url:       ${BUCKET_PUBLIC_URL}/${PROCESSED_FILENAME}"
+    MSG_ARTIST="Artist:              ${THIS_ARTIST}"
+    MSG_MP3="mp3:                 ${THIS_MPTHREE}"
+    MSG_CACHED_MP3="Cached mp3:          ${BUCKET_PUBLIC_URL}/audio/${SONG_SHA}.mp3"
+    slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "${MSG_RUNTIME}\n${MSG_PROCURL}\n${MSG_ARTIST}\n$MSG_MP3\n${MSG_CACHED_MP3}"
   fi
 fi
