@@ -24,24 +24,24 @@ solution.
 *** - Required parameter
 Usage: ./start.sh [arguments]
 
-     *** --name        [str]  - Name of camera/timelapse
-     *** --target-date [date] - Date of timelapse
-     *** --target-dir  [path] - A directory where images and
+*** --name              [str] - Name of camera/timelapse
+*** --target-date      [date] - Date of timelapse
+*** --target-dir       [path] - A directory where images and
                                 videos can be stored
-     *** --source-base [path] - An s3 bucket, containing timelapse
+*** --source-base      [path] - An s3 bucket, containing timelapse
                                 images. 
-     *** --target-base [path] - An s3 bucket, to store processed
+*** --target-base      [path] - An s3 bucket, to store processed
                                 images, audio files and their meta-data
-   *** --sqlite-db [filename] - An sqlite db filename found relateive
+*** --sqlite-db    [filename] - An sqlite db filename found relateive
                                 to target-base s3 bucket
-      --existing-audio [SHA]  - default behavior is to pick a new
+--existing-audio        [SHA] - default behavior is to pick a new
                                 random audio file.
-     --genre           [str]  - Blues,Classical,Folk,Hip-Hop,Instrumental,
+--genre                 [str] - Blues,Classical,Folk,Hip-Hop,Instrumental,
                                 International,Jazz,Lo-fi,Old-Time__Historic,
                                 Pop,Rock,Soul-RB (default: Hip-Hop)
- --slack-channel [channel-id] - Optional channel id to report completed timelapse/url
- --slack-user       [user-id] - Optional user id to report status updates
-      --slack-token   [token]   - Required token if --slack-channel is set 
+--slack-channel  [channel-id] - Optional channel id to report completed timelapse/url
+--slack-user        [user-id] - Optional user id to report status updates
+--slack-token         [token] --- Required token if --slack-channel is set 
 
 EOF
 
@@ -124,10 +124,6 @@ BUCKET_PUBLIC_NAME=$(echo $TARGET_BASE | awk -F\/ '{print $3}')
 BUCKET_PUBLIC_PATH=$(echo $TARGET_BASE | sed 's/^.*'$BUCKET_PUBLIC_NAME'\///g')
 BUCKET_PUBLIC_URL="https://$BUCKET_PUBLIC_NAME.s3.amazonaws.com/$BUCKET_PUBLIC_PATH"
 
-# SOURCE_BASE_NAME=$(echo $SOURCE_BASE | awk -F\/ '{print $3}')
-# SOURCE_BASE_PATH=$(echo $SOURCE_BASE | sed 's/^.*'$SOURCE_BASE_NAME'\///g')
-# SOURCE_BASE_URL="https://$SOURCE_BASE_NAME.s3.amazonaws.com/$SOURCE_BASE_PATH"
-
 NOW=$(date +%s)
 KEY="${NAME}_${T_YEAR}_${T_MONTH}_${T_DAY}"
 FILENAME="${KEY}.mp4"
@@ -157,6 +153,15 @@ fi
 ##########################################################################
 
 
+# Check to see if video already has been processed
+PROCESSED_VIDEO_EXISTS=$(aws s3 ls ${TARGET_BASE}/${PROCESSED_FILENAME})
+if ! [ -z "$PROCESSED_VIDEO_EXISTS" ]; then
+  # Delete video from database
+  echo "Video already processed. Audio must suck. try again. Backup video. delete audio from db. add sha to rejected list. delete processed video from db"
+  # aws s3 cp ${TARGET_BASE}/${PROCESSED_FILENAME} /tmp/
+fi
+
+
 
 SQLITE_EXISTS=$(aws s3 ls ${TARGET_BASE}/${SQLITE_DB})
 if [ -z "$SQLITE_EXISTS" ]; then
@@ -183,7 +188,7 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
   if ! [ -z "$SLACK_CHANNEL_ID" ]; then
     if ! [ -z "$SLACK_TOKEN" ]; then
       if ! [ -z "$SLACK_USER_ID" ]; then
-        slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log: Pulling images down from s3\n${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${CURRENT_HOUR}/\`\`\`"
+        slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log: Pulling images down from s3\`\`\`"
       fi
     fi
   fi
@@ -418,6 +423,6 @@ if ! [ -z "$SLACK_CHANNEL_ID" ]; then
     MSG_ARTIST="Artist:              ${THIS_ARTIST}"
     MSG_MP3="mp3:                 ${THIS_MPTHREE}"
     MSG_CACHED_MP3="Cached mp3:          ${BUCKET_PUBLIC_URL}/audio/${SONG_SHA}.mp3"
-    slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "${MSG_RUNTIME}\n${MSG_PROCURL}\n${MSG_ARTIST}\n$MSG_MP3\n${MSG_CACHED_MP3}"
+    slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "${MSG_RUNTIME}\n${MSG_PROCURL}\n${MSG_ARTIST}\n${MSG_MP3}\n${MSG_CACHED_MP3}"
   fi
 fi
