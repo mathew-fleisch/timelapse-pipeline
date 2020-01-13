@@ -81,6 +81,8 @@ while [[ $# -gt 0 ]] && [[ "$1" == "--"* ]]; do
          GENRE="$1"; shift;;
       "--slack-channel" )
          SLACK_CHANNEL_ID="$1"; shift;;
+      "--slack-user" )
+         SLACK_USER_ID="$1"; shift;;
       "--slack-token" )
          SLACK_TOKEN="$1"; shift;;
       *) echo >&2 "Invalid option: $@"; exit 1;;
