@@ -432,11 +432,12 @@ if ! [ -z "$SLACK_CHANNEL_ID" ]; then
   else
     ARTIST_NAME=$(echo $THIS_ARTIST | s -e 's/^.*">//g' | sed -e 's/<\/a>.*$//g')
     ARTIST_LINK=$(echo $THIS_ARTIST | s -e 's/.*a href="(.*)">.*/\1/g')
-    MSG_RUNTIME="Timelapse Complete:  ${runtime}"
-    MSG_PROCURL="Processed Url:       ${BUCKET_PUBLIC_URL}/${PROCESSED_FILENAME}"
-    MSG_ARTIST="Artist:              ${ARTIST_NAME} - ${ARTIST_LINK}"
-    MSG_MP3="mp3:                 ${THIS_MPTHREE}"
-    MSG_CACHED_MP3="Cached mp3:       ${BUCKET_PUBLIC_URL}/audio/${SONG_SHA}.mp3"
-    slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "${MSG_RUNTIME}\n${MSG_PROCURL}\n${MSG_ARTIST}\n${MSG_MP3}\n${MSG_CACHED_MP3}"
+    MSG_RUNTIME="Timelapse Complete:\n${runtime}\n"
+    MSG_DATE="Date/Camera:\n${T_YEAR}/${T_MONTH}/${T_DAY} - ${NAME}\n"
+    MSG_PROCURL="Processed Url:\n${BUCKET_PUBLIC_URL}/${PROCESSED_FILENAME}\n"
+    MSG_ARTIST="Artist:\n${ARTIST_NAME} - ${ARTIST_LINK}\n"
+    MSG_MP3="mp3:\n${THIS_MPTHREE}\n"
+    MSG_CACHED_MP3="Cached mp3:\n${BUCKET_PUBLIC_URL}/audio/${SONG_SHA}.mp3"
+    slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "\`\`\`${MSG_DATE}\n${MSG_RUNTIME}\n${MSG_PROCURL}\n${MSG_ARTIST}\n${MSG_MP3}\n${MSG_CACHED_MP3}\`\`\`"
   fi
 fi
