@@ -33,8 +33,8 @@ echo "Adding fade in/out"
 FADE=$(echo $AUDIO | sed -e 's/_audio/_fade/g')
 ffmpeg -hide_banner -loglevel panic -i $AUDIO -filter:v "fade=in:st=0:d=2, fade=out:st=${VIDEO_FADE}:d=2" $FADE
 MERGE_ENDED=$(date +%s)
-MERGE_FINISHED=$((ENDED-NOW))
-MERGE_RUNTIME=$(convertsecs $FINISHED)
+MERGE_FINISHED=$((MERGE_ENDED-MERGE_START))
+MERGE_RUNTIME=$(convertsecs $MERGE_FINISHED)
 echo "*********************************************************"
 echo "Merge Runtime: $MERGE_RUNTIME"
 echo "*********************************************************"
