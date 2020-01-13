@@ -357,7 +357,7 @@ fi
   if ! [ -z "$SLACK_CHANNEL_ID" ]; then
     if ! [ -z "$SLACK_TOKEN" ]; then
       if ! [ -z "$SLACK_USER_ID" ]; then
-        slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log: Merging with timelapse\n                ${BUCKET_PUBLIC_URL}/audio/${SONG_SHA}.mp3\n                ${BUCKET_PUBLIC_URL}/${TARGET_FILENAME}\`\`\`"
+        slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log: Merging with timelapse\n${BUCKET_PUBLIC_URL}/audio/${SONG_SHA}.mp3\n${BUCKET_PUBLIC_URL}/${TARGET_FILENAME}\`\`\`"
       fi
   fi
 fi
