@@ -188,7 +188,10 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
   if ! [ -z "$SLACK_CHANNEL_ID" ]; then
     if ! [ -z "$SLACK_TOKEN" ]; then
       if ! [ -z "$SLACK_USER_ID" ]; then
-        slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log: Pulling images down from s3\`\`\`"
+        PROGRESS_CHECK=$(date +%s)
+        PROG_CHECK_SEC=$((PROGRESS_CHECK-NOW))
+        PROG_CHECK_RTM=$(convertsecs $PROG_CHECK_SEC)
+        slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log[${PROG_CHECK_RTM}]: Pulling images down from s3\`\`\`"
       fi
     fi
   fi
@@ -242,7 +245,10 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
   if ! [ -z "$SLACK_CHANNEL_ID" ]; then
     if ! [ -z "$SLACK_TOKEN" ]; then
       if ! [ -z "$SLACK_USER_ID" ]; then
-        slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log: Starting ffmpeg\`\`\`"
+        PROGRESS_CHECK=$(date +%s)
+        PROG_CHECK_SEC=$((PROGRESS_CHECK-NOW))
+        PROG_CHECK_RTM=$(convertsecs $PROG_CHECK_SEC)
+        slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log[${PROG_CHECK_RTM}]: Starting ffmpeg\`\`\`"
       fi
     fi
   fi
@@ -285,7 +291,10 @@ if [ -z "$EXISTING_AUDIO" ]; then
   if ! [ -z "$SLACK_CHANNEL_ID" ]; then
     if ! [ -z "$SLACK_TOKEN" ]; then
       if ! [ -z "$SLACK_USER_ID" ]; then
-        slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log: Get music\`\`\`"
+        PROGRESS_CHECK=$(date +%s)
+        PROG_CHECK_SEC=$((PROGRESS_CHECK-NOW))
+        PROG_CHECK_RTM=$(convertsecs $PROG_CHECK_SEC)
+        slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log[${PROG_CHECK_RTM}]: Get music\`\`\`"
       fi
     fi
   fi
@@ -361,7 +370,10 @@ fi
   if ! [ -z "$SLACK_CHANNEL_ID" ]; then
     if ! [ -z "$SLACK_TOKEN" ]; then
       if ! [ -z "$SLACK_USER_ID" ]; then
-        slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log: Merging with timelapse\n${BUCKET_PUBLIC_URL}/audio/${SONG_SHA}.mp3\n${BUCKET_PUBLIC_URL}/${TARGET_FILENAME}\`\`\`"
+        PROGRESS_CHECK=$(date +%s)
+        PROG_CHECK_SEC=$((PROGRESS_CHECK-NOW))
+        PROG_CHECK_RTM=$(convertsecs $PROG_CHECK_SEC)
+        slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log[${PROG_CHECK_RTM}]: Merging with timelapse\n${BUCKET_PUBLIC_URL}/audio/${SONG_SHA}.mp3\n${BUCKET_PUBLIC_URL}/${TARGET_FILENAME}\`\`\`"
       fi
   fi
 fi
@@ -418,11 +430,13 @@ if ! [ -z "$SLACK_CHANNEL_ID" ]; then
     echo "Slack Token is required to run this action."
     exit 0
   else
+    ARTIST_NAME=$(echo $THIS_ARTIST | s -e 's/^.*">//g' | sed -e 's/<\/a>.*$//g')
+    ARTIST_LINK=$(echo $THIS_ARTIST | s -e 's/.*a href="(.*)">.*/\1/g')
     MSG_RUNTIME="Timelapse Complete:  ${runtime}"
     MSG_PROCURL="Processed Url:       ${BUCKET_PUBLIC_URL}/${PROCESSED_FILENAME}"
-    MSG_ARTIST="Artist:              ${THIS_ARTIST}"
+    MSG_ARTIST="Artist:              ${ARTIST_NAME} - ${ARTIST_LINK}"
     MSG_MP3="mp3:                 ${THIS_MPTHREE}"
-    MSG_CACHED_MP3="Cached mp3:          ${BUCKET_PUBLIC_URL}/audio/${SONG_SHA}.mp3"
+    MSG_CACHED_MP3="Cached mp3:       ${BUCKET_PUBLIC_URL}/audio/${SONG_SHA}.mp3"
     slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "${MSG_RUNTIME}\n${MSG_PROCURL}\n${MSG_ARTIST}\n${MSG_MP3}\n${MSG_CACHED_MP3}"
   fi
 fi
