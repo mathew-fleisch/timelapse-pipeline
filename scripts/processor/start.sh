@@ -40,6 +40,7 @@ Usage: ./start.sh [arguments]
                                 International,Jazz,Lo-fi,Old-Time__Historic,
                                 Pop,Rock,Soul-RB (default: Hip-Hop)
  --slack-channel [channel-id] - Optional channel id to report completed timelapse/url
+ --slack-user       [user-id] - Optional user id to report status updates
       --slack-token   [token]   - Required token if --slack-channel is set 
 
 EOF
@@ -148,6 +149,10 @@ fi
 if ! [ -z "$SLACK_CHANNEL_ID" ]; then
   echo "Channel:   $SLACK_CHANNEL_ID"
 fi
+  e
+if ! [ -z "$SLACK_USER_ID" ]; then
+  echo "User:      $SLACK_USER_ID"
+fi
 ##########################################################################
 
 
@@ -175,11 +180,10 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
     exit 1
   fi
   if ! [ -z "$SLACK_CHANNEL_ID" ]; then
-    if [ -z "$SLACK_TOKEN" ]; then
-      echo "Slack Token is required to run this action."
-      exit 0
-    else
-      slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log: Pulling images down from s3\n               ${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${CURRENT_HOUR}/\`\`\`"
+    if ! [ -z "$SLACK_TOKEN" ]; then
+      if ! [ -z "$SLACK_USER_ID" ]; then
+        slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log: Pulling images down from s3\n${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${CURRENT_HOUR}/\`\`\`"
+      fi
     fi
   fi
   echo "Checking to see if source images exist..."
@@ -230,11 +234,10 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
   fi
 
   if ! [ -z "$SLACK_CHANNEL_ID" ]; then
-    if [ -z "$SLACK_TOKEN" ]; then
-      echo "Slack Token is required to run this action."
-      exit 0
-    else
-      slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log: Starting ffmpeg\`\`\`"
+    if ! [ -z "$SLACK_TOKEN" ]; then
+      if ! [ -z "$SLACK_USER_ID" ]; then
+        slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log: Starting ffmpeg\`\`\`"
+      fi
     fi
   fi
   # Pick arbitrary threshold of minimum frames
@@ -274,11 +277,10 @@ if [ -z "$EXISTING_AUDIO" ]; then
   echo "-------------------------------------------------------------"
 
   if ! [ -z "$SLACK_CHANNEL_ID" ]; then
-    if [ -z "$SLACK_TOKEN" ]; then
-      echo "Slack Token is required to run this action."
-      exit 0
-    else
-      slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log: Get music\`\`\`"
+    if ! [ -z "$SLACK_TOKEN" ]; then
+      if ! [ -z "$SLACK_USER_ID" ]; then
+        slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log: Get music\`\`\`"
+      fi
     fi
   fi
   echo "Get random mp3 from FreeMediaArchive.org"
@@ -349,12 +351,12 @@ else
   aws s3 cp ${TARGET_BASE}/audio/${SONG_SHA}.mp3 ${TARGET_DIR}/music/${SONG_SHA}.mp3
 fi
 
-if ! [ -z "$SLACK_CHANNEL_ID" ]; then
-  if [ -z "$SLACK_TOKEN" ]; then
-    echo "Slack Token is required to run this action."
-    exit 0
-  else
-    slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log: Merging with timelapse\n               ${BUCKET_PUBLIC_URL}/audio/${SONG_SHA}.mp3\n               ${BUCKET_PUBLIC_URL}/${TARGET_FILENAME}"
+
+  if ! [ -z "$SLACK_CHANNEL_ID" ]; then
+    if ! [ -z "$SLACK_TOKEN" ]; then
+      if ! [ -z "$SLACK_USER_ID" ]; then
+        slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log: Merging with timelapse\n                ${BUCKET_PUBLIC_URL}/audio/${SONG_SHA}.mp3\n                ${BUCKET_PUBLIC_URL}/${TARGET_FILENAME}"
+      fi
   fi
 fi
 ##########################################################################

@@ -64,13 +64,30 @@ slack_message() {
   T_SLACK_TOKEN="$1"
   T_CHANNEL="$2"
   T_MESSAGE="$3"
-  # T_MESSAGE=$(echo $3 | sed -e 's/\s/+/g') 
-  # T_MESSAGE=$(urlencode $3)
-  
-  # curl -s -X POST https://slack.com/api/chat.postMessage?token=${T_SLACK_TOKEN}\&channel=${T_CHANNEL}\&text=${T_MESSAGE}
-
-  # curl -X POST -H 'Authorization: Bearer '${T_SLACK_TOKEN} -H 'Content-type: application/json; charset=utf-8' --data '{"channel":"'${T_CHANNEL}'","text":"'${T_MESSAGE}'"}' https://slack.com/api/chat.postMessage
   curl -X POST -H 'Authorization: Bearer '${T_SLACK_TOKEN} -H 'Content-type: application/json; charset=utf-8' --data "{\"channel\":\"${T_CHANNEL}\",\"text\":\"${T_MESSAGE}\"}" https://slack.com/api/chat.postMessage
+}
+slack_message_ephemeral() {
+  if [ -z "$1" ]; then
+    echo "Must include slack api token"
+    exit 1
+  fi
+  if [ -z "$2" ]; then
+    echo "Must include a channel id"
+    exit 1
+  fi
+  if [ -z "$3" ]; then
+    echo "Must include user id to show secret messsage"
+    exit 1
+  fi
+  if [ -z "$4" ]; then
+    echo "Must include message to send"
+    exit 1
+  fi
+  T_SLACK_TOKEN="$1"
+  T_CHANNEL="$2"
+  T_USER="$3"
+  T_MESSAGE="$4"
+  curl -X POST -H 'Authorization: Bearer '${T_SLACK_TOKEN} -H 'Content-type: application/json; charset=utf-8' --data "{\"channel\":\"${T_CHANNEL}\",\"text\":\"${T_MESSAGE}\"}" https://slack.com/api/chat.postEphemeral
 }
 initialize_sqlite_db() {
   if [ -z "$1" ]; then
