@@ -151,7 +151,6 @@ fi
 if ! [ -z "$SLACK_CHANNEL_ID" ]; then
   echo "Channel:   $SLACK_CHANNEL_ID"
 fi
-  e
 if ! [ -z "$SLACK_USER_ID" ]; then
   echo "User:      $SLACK_USER_ID"
 fi
