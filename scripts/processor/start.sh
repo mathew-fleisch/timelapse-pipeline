@@ -121,6 +121,10 @@ BUCKET_PUBLIC_NAME=$(echo $TARGET_BASE | awk -F\/ '{print $3}')
 BUCKET_PUBLIC_PATH=$(echo $TARGET_BASE | sed 's/^.*'$BUCKET_PUBLIC_NAME'\///g')
 BUCKET_PUBLIC_URL="https://$BUCKET_PUBLIC_NAME.s3.amazonaws.com/$BUCKET_PUBLIC_PATH"
 
+# SOURCE_BASE_NAME=$(echo $SOURCE_BASE | awk -F\/ '{print $3}')
+# SOURCE_BASE_PATH=$(echo $SOURCE_BASE | sed 's/^.*'$SOURCE_BASE_NAME'\///g')
+# SOURCE_BASE_URL="https://$SOURCE_BASE_NAME.s3.amazonaws.com/$SOURCE_BASE_PATH"
+
 NOW=$(date +%s)
 KEY="${NAME}_${T_YEAR}_${T_MONTH}_${T_DAY}"
 FILENAME="${KEY}.mp4"
@@ -175,7 +179,7 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
       echo "Slack Token is required to run this action."
       exit 0
     else
-      slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "Pulling images down from s3 for ${T_YEAR}/${T_MONTH}/${T_DAY}"
+      slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log: Pulling images down from s3\n               ${SOURCE_BASE}/${T_YEAR}/${T_MONTH}/${T_DAY}/${T_YEAR}_${T_MONTH}_${T_DAY}_${CURRENT_HOUR}/\`\`\`"
     fi
   fi
   echo "Checking to see if source images exist..."
@@ -230,7 +234,7 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
       echo "Slack Token is required to run this action."
       exit 0
     else
-      slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "Starting ffmpeg ${T_YEAR}/${T_MONTH}/${T_DAY}"
+      slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log: Starting ffmpeg\`\`\`"
     fi
   fi
   # Pick arbitrary threshold of minimum frames
@@ -274,7 +278,7 @@ if [ -z "$EXISTING_AUDIO" ]; then
       echo "Slack Token is required to run this action."
       exit 0
     else
-      slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "Get music for ${T_YEAR}/${T_MONTH}/${T_DAY}"
+      slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log: Get music\`\`\`"
     fi
   fi
   echo "Get random mp3 from FreeMediaArchive.org"
@@ -350,7 +354,7 @@ if ! [ -z "$SLACK_CHANNEL_ID" ]; then
     echo "Slack Token is required to run this action."
     exit 0
   else
-    slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "Music for ${T_YEAR}/${T_MONTH}/${T_DAY}: ${BUCKET_PUBLIC_URL}/music/${SONG_SHA}.mp3 \nMerging with timelapse"
+    slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log: Merging with timelapse\n               ${BUCKET_PUBLIC_URL}/audio/${SONG_SHA}.mp3\n               ${BUCKET_PUBLIC_URL}/${TARGET_FILENAME}"
   fi
 fi
 ##########################################################################
