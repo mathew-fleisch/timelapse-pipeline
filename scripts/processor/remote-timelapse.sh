@@ -23,7 +23,8 @@ Usage: ./remote-timelapse.sh [arguments]
 
   *** --circle-token  [str] - Overwrites environment variable TIMELAPSE_CIRCLE_TOKEN
   *** --org-fork      [str] - github/circleci org/user to run jobs under
-  *** --camera-name   [str] - Name of camera (used as key for grouping)
+  *** --source-name   [str] - Name of camera (used as key for grouping)
+  *** --source-base   [str] - s3 bucket+path of the source images
   *** --target-date   [str] - Date to generate timelapse
   *** --target-base   [str] - s3 bucket+path of where video will end up
   *** --slack-channel [str] - Report completion to this slack channel
@@ -42,17 +43,17 @@ while [[ $# -gt 0 ]] && [[ "$1" == "--"* ]]; do
          TIMELAPSE_CIRCLE_TOKEN="$1"; shift;;
       "--org-fork" )
          ORG_FORK="$1"; shift;;
-      "--camera-name" )
+      "--source-name" )
          SOURCE_NAME="$1"; shift;;
-      "--source-bucket" )
+      "--source-base" )
          SOURCE_BASE="$1"; shift;;
       "--target-base" )
          TARGET_BASE="$1"; shift;;
       "--target-date" )
          TARGET_DATE="$1"; shift;;
-      "--triggered-channel" )
+      "--slack-channel" )
          TRIGGERED_CHANNEL_ID="$1"; shift;;
-      "--triggered-user" )
+      "--slack-user" )
          TRIGGERED_USER_ID="$1"; shift;;
       "--overwrite-existing" )
          OVERWRITE_EXISTING="$1"; shift;;
@@ -73,43 +74,43 @@ fi
 if [ -z "$ORG_FORK" ]; then
   echo "$banner"
   echo "$help"
-  echo "Missing organization/fork from circleci/github..."
+  echo "Missing organization/fork from circleci/github... ORG_FORK"
   exit 0
 fi
 if [ -z "$SOURCE_NAME" ]; then
   echo "$banner"
   echo "$help"
-  echo "Must specify camera name (used as identifier)"
+  echo "Must specify camera name (used as identifier) SOURCE_NAME"
   exit 0
 fi
 if [ -z "$SOURCE_BASE" ]; then
   echo "$banner"
   echo "$help"
-  echo "Must specify an s3 bucket to pull images from"
+  echo "Must specify an s3 bucket to pull images from SOURCE_BASE"
   exit 0
 fi
 if [ -z "$TARGET_BASE" ]; then
   echo "$banner"
   echo "$help"
-  echo "Must specify a target s3 bucket where the processed videos will end up"
+  echo "Must specify a target s3 bucket where the processed videos will end up TARGET_BASE"
   exit 0
 fi
 if [ -z "$TARGET_DATE" ]; then
   echo "$banner"
   echo "$help"
-  echo "Must specify a target date (Format: YYYY/MM/DD)"
+  echo "Must specify a target date (Format: YYYY/MM/DD) TARGET_DATE"
   exit 0
 fi
 if [ -z "$TRIGGERED_CHANNEL_ID" ]; then
   echo "$banner"
   echo "$help"
-  echo ""
+  echo "Missing slack channel id TRIGGERED_CHANNEL_ID"
   exit 0
 fi
 if [ -z "$TRIGGERED_USER_ID" ]; then
   echo "$banner"
   echo "$help"
-  echo ""
+  echo "Missing slack channel id TRIGGERED_USER_ID"
   exit 0
 fi
 
@@ -137,17 +138,17 @@ PROCESSED_VIDEO_EXISTS=$(aws s3 ls ${TARGET_BASE}/${T_YEAR}_${T_MONTH}_${T_DAY}/
 
 if [ -z "$PROCESSED_VIDEO_EXISTS" ] || [ "$OVERWRITE_EXISTING" -eq 1 ]; then
   echo "Video not found for $TARGET_DATE. Let's generate one..."
-  json=$(jq -c -r -n '{"build_parameters":{' \
-        '"CIRCLE_JOB":"make_timelapse",' \
-        '"TARGET_DATE":"'$TARGET_DATE'",' \
-        '"TARGET_BASE":"'$TARGET_BASE'",' \
-        '"SOURCE_NAME":"'$SOURCE_NAME'",' \
-        '"SOURCE_BASE":"'$SOURCE_BASE'",' \
-        '"TRIGGERED_CHANNEL_ID":"'$TRIGGERED_CHANNEL_ID'",' \
-        '"TRIGGERED_USER_ID":"'$TRIGGERED_USER_ID'",' \
-        '"SLACK_TOKEN":"'$SLACK_TOKEN'",' \
-        '"EXISTING_AUDIO":"'$EXISTING_AUDIO'"' \
-      '}}')
+  json=$(jq -c -r -n '{"build_parameters":{
+        "CIRCLE_JOB":"make_timelapse",
+        "TARGET_DATE":"'$TARGET_DATE'",
+        "TARGET_BASE":"'$TARGET_BASE'",
+        "SOURCE_NAME":"'$SOURCE_NAME'",
+        "SOURCE_BASE":"'$SOURCE_BASE'",
+        "TRIGGERED_CHANNEL_ID":"'$TRIGGERED_CHANNEL_ID'",
+        "TRIGGERED_USER_ID":"'$TRIGGERED_USER_ID'",
+        "SLACK_TOKEN":"'$SLACK_TOKEN'",
+        "EXISTING_AUDIO":"'$EXISTING_AUDIO'"
+      }}')
   response=$(curl -s -X POST --data $json --header "Content-Type:application/json" --url "$BUILD_URL")
 
   echo "https://circleci.com/gh/${ORG_FORK}/timelapse-pipeline/$(echo $response | jq -r -c '.build_num')"
