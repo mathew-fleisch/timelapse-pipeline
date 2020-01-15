@@ -159,7 +159,13 @@ PROCESSED_VIDEO_EXISTS=$(aws s3 ls ${TARGET_BASE}/${PROCESSED_FILENAME})
 if ! [ -z "$PROCESSED_VIDEO_EXISTS" ]; then
   # Delete video from database
   echo "Video already processed. Audio must suck. try again. Backup video. delete audio from db. add sha to rejected list. delete processed video from db"
-  # aws s3 cp ${TARGET_BASE}/${PROCESSED_FILENAME} /tmp/
+  
+  # Copy processed video locally
+  mkdir -p ${TARGET_DIR}/tmp
+  aws s3 cp ${TARGET_BASE}/${PROCESSED_FILENAME} ${TARGET_DIR}/tmp/${FILENAME}
+
+  # Get meta-data about existing file
+
 fi
 
 
@@ -511,12 +517,13 @@ if ! [ -z "$SLACK_CHANNEL_ID" ]; then
   else
     ARTIST_NAME=$(echo $THIS_ARTIST | s -e 's/^.*">//g' | sed -e 's/<\/a>.*$//g')
     ARTIST_LINK=$(echo $THIS_ARTIST | s -e 's/.*a href="(.*)">.*/\1/g')
+    TMP_ARTIST=$(echo $THIS_ARTIST | sed -e 's/"/\\"/g')
     MSG_RUNTIME="Timelapse Complete:\n${runtime}\n"
     MSG_DATE="Date/Camera:\n${T_YEAR}/${T_MONTH}/${T_DAY} - ${NAME}\n"
     MSG_PROCURL="Processed Url:\n${BUCKET_PUBLIC_URL}/${PROCESSED_FILENAME}\n"
     MSG_ARTIST="Artist:\n${ARTIST_NAME} - ${ARTIST_LINK}\n"
     MSG_MP3="mp3:\n${THIS_MPTHREE}\n"
     MSG_CACHED_MP3="Cached mp3:\n${BUCKET_PUBLIC_URL}/audio/${SONG_SHA}.mp3"
-    slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "\`\`\`${MSG_DATE}\n${MSG_RUNTIME}\n${MSG_PROCURL}\n${MSG_ARTIST}\nTHIS_ARTIST:${THIS_ARTIST}\n${MSG_MP3}\n${MSG_CACHED_MP3}\`\`\`"
+    slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "\`\`\`${MSG_DATE}\n${MSG_RUNTIME}\n${MSG_PROCURL}\n${MSG_ARTIST}\nTMP_ARTIST:\n${TMP_ARTIST}\n${MSG_MP3}\n${MSG_CACHED_MP3}\`\`\`"
   fi
 fi
