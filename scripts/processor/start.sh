@@ -48,6 +48,7 @@ EOF
 
 MIN_IMAGES_THRESHOLD=5000
 SHORT_SONG_THRESHOLD=150
+LONG_SONG_THRESHOLD=420
 DEFAULT_START=0
 DEFAULT_END=23
 GENRE="Lo-fi"
@@ -214,6 +215,18 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
   done
   if [ $TOTAL_IMAGES_FOR_DAY -lt $MIN_IMAGES_THRESHOLD ]; then
     echo "Error: Staged Images under threshold ($MIN_IMAGES_THRESHOLD)"
+
+    if ! [ -z "$SLACK_CHANNEL_ID" ]; then
+      if [ -z "$SLACK_TOKEN" ]; then
+        echo "Slack Token is required to run this action."
+      else
+        PROGRESS_CHECK=$(date +%s)
+        PROG_CHECK_SEC=$((PROGRESS_CHECK-NOW))
+        PROG_CHECK_RTM=$(convertsecs $PROG_CHECK_SEC)
+        slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "\`\`\`[ERROR]${T_YEAR}/${T_MONTH}/${T_DAY}-log[${PROG_CHECK_RTM}]: Staged Images under threshold ($MIN_IMAGES_THRESHOLD)\`\`\`"
+      fi
+    fi
+
     exit 1
   fi
   rm -rf ${TARGET_DIR}/stage
@@ -239,6 +252,18 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
   ##########################################################################
   if [ $NUM_STAGED -lt $MIN_IMAGES_THRESHOLD ]; then
     echo "Error: Staged Images under threshold ($MIN_IMAGES_THRESHOLD)"
+
+    if ! [ -z "$SLACK_CHANNEL_ID" ]; then
+      if [ -z "$SLACK_TOKEN" ]; then
+        echo "Slack Token is required to run this action."
+      else
+        PROGRESS_CHECK=$(date +%s)
+        PROG_CHECK_SEC=$((PROGRESS_CHECK-NOW))
+        PROG_CHECK_RTM=$(convertsecs $PROG_CHECK_SEC)
+        slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "\`\`\`[ERROR]${T_YEAR}/${T_MONTH}/${T_DAY}-log[${PROG_CHECK_RTM}]: Staged Images under threshold ($MIN_IMAGES_THRESHOLD)\`\`\`"
+      fi
+    fi
+
     exit 1
   fi
 
@@ -258,6 +283,18 @@ if [ -z "$RAW_VIDEO_EXISTS" ]; then
 
   if ! [ -f "$LOCAL_FILENAME" ]; then
     echo "mp4 failed to generate..."
+
+    if ! [ -z "$SLACK_CHANNEL_ID" ]; then
+      if [ -z "$SLACK_TOKEN" ]; then
+        echo "Slack Token is required to run this action."
+      else
+        PROGRESS_CHECK=$(date +%s)
+        PROG_CHECK_SEC=$((PROGRESS_CHECK-NOW))
+        PROG_CHECK_RTM=$(convertsecs $PROG_CHECK_SEC)
+        slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "\`\`\`[ERROR]${T_YEAR}/${T_MONTH}/${T_DAY}-log[${PROG_CHECK_RTM}]: mp4 failed to generate\`\`\`"
+      fi
+    fi
+
     exit 1
   fi
   DURATION=$(get_duration_in_seconds $LOCAL_FILENAME)
@@ -280,6 +317,18 @@ fi
 
 if ! [ -f "${TARGET_DIR}/output/${FILENAME}" ]; then
   echo "Error: mp4 failed to generate/download"
+
+  if ! [ -z "$SLACK_CHANNEL_ID" ]; then
+    if [ -z "$SLACK_TOKEN" ]; then
+      echo "Slack Token is required to run this action."
+    else
+      PROGRESS_CHECK=$(date +%s)
+      PROG_CHECK_SEC=$((PROGRESS_CHECK-NOW))
+      PROG_CHECK_RTM=$(convertsecs $PROG_CHECK_SEC)
+      slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "\`\`\`[ERROR]${T_YEAR}/${T_MONTH}/${T_DAY}-log[${PROG_CHECK_RTM}]: mp4 failed to generate or download existing\`\`\`"
+    fi
+  fi
+
   exit 1
 fi
 
@@ -308,11 +357,15 @@ if [ -z "$EXISTING_AUDIO" ]; then
 
     MUSIC=$(./get-music.sh --genre $GENRE)
     mkdir -p ${TARGET_DIR}/music
+
+    # Get list of the used shas (don't keep local copy of db)
+    get_audio_keys $TARGET_BASE/timelapse.db ${TARGET_DIR}/music/timelapse.db > ${TARGET_DIR}/music/previously_used_shas.txt
+    rm -rf ${TARGET_DIR}/music/timelapse.db
+
     echo "Parse Response: ./get-music.sh --genre $GENRE"
-    # There are 20 mp3s per page exported as json
-    # Iterate through each one, check to see if already
-    # rejected, then check duration to see if greater 
-    # than minimum threshold
+    # There are 20 mp3s per page exported as json. Iterate through each one,
+    # check to see if already rejected, or already used, then check duration to
+    # see if greater than minimum threshold and less than maximum threshold.
     for row in $(echo "${MUSIC}" | jq -r '.[] | @base64'); do
       echo "-------------------------------------------------------------"
       _jq() {
@@ -324,7 +377,8 @@ if [ -z "$EXISTING_AUDIO" ]; then
       THIS_MPTHREE=$(_jq '.mpthree')
       SONG_SHA=$(echo $THIS_MPTHREE | shasum | awk '{print $1}')
       ALREADY_REJECTED=$(cat ${TARGET_DIR}/music/rejected.txt | grep ${SONG_SHA})
-      if [ -z "$ALREADY_REJECTED" ]; then
+      PREVIOUSLY_USED=$(cat ${TARGET_DIR}/music/previously_used_shas.txt | grep ${SONG_SHA})
+      if [ -z "$ALREADY_REJECTED" ] && [ -z "$PREVIOUSLY_USED" ]; then
         echo "Artist: $THIS_ARTIST"
         echo "MP3:    $THIS_MPTHREE"
         echo "SHA:    ${SONG_SHA}.mp3"
@@ -332,20 +386,25 @@ if [ -z "$EXISTING_AUDIO" ]; then
         curl -s $THIS_MPTHREE --output ${TARGET_DIR}/music/${SONG_SHA}.mp3
         THIS_DURATION=$(get_duration_in_seconds ${TARGET_DIR}/music/${SONG_SHA}.mp3)
         echo "Duration: $THIS_DURATION ?> $SHORT_SONG_THRESHOLD"
-        if [ $THIS_DURATION -gt $SHORT_SONG_THRESHOLD ]; then
-          # Check to see if mp3 has been used before
+        if [ $THIS_DURATION -gt $SHORT_SONG_THRESHOLD ] && [ $THIS_DURATION -lt $LONG_SONG_THRESHOLD ]; then
           echo " *********> This song should do! <********* "
           let FOUND_MUSIC++
           put_audio ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timelapse.db "$SONG_SHA" "$THIS_ARTIST" "$THIS_ALBUM" "$THIS_GENRE" "$THIS_MPTHREE" $THIS_DURATION
           aws s3 cp ${TARGET_DIR}/music/${SONG_SHA}.mp3 ${TARGET_BASE}/audio/${SONG_SHA}.mp3
           break
         else
-          echo "Rejected: $SONG_SHA"
+          echo "Duration Rejected [${THIS_DURATION}]: $SONG_SHA"
           echo "$SONG_SHA" >> ${TARGET_DIR}/music/new-rejects.txt
         fi
       else
-        echo "Already Rejected:"
+        echo "Rejected:"
         echo "$THIS_MPTHREE"
+        if ! [ -z "$ALREADY_REJECTED" ]; then
+          echo "Already rejected."
+        fi
+        if ! [ -z "$PREVIOUSLY_USED" ]; then
+          echo "This track has already been used."
+        fi
       fi
     done
   done
@@ -388,12 +447,32 @@ echo "-------------------------------------------------------------"
 ./merge-audio-video.sh ${TARGET_DIR}/music/${SONG_SHA}.mp3 ${TARGET_DIR}/output/${FILENAME}
 
 
+if ! [ -z "$SLACK_CHANNEL_ID" ]; then
+  if ! [ -z "$SLACK_TOKEN" ]; then
+    if ! [ -z "$SLACK_USER_ID" ]; then
+      PROGRESS_CHECK=$(date +%s)
+      PROG_CHECK_SEC=$((PROGRESS_CHECK-NOW))
+      PROG_CHECK_RTM=$(convertsecs $PROG_CHECK_SEC)
+      slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log[${PROG_CHECK_RTM}]: Audio/Video merged. Add fade in/out\`\`\`"
+    fi
+fi
+
 NEW_DURATION=$(get_duration_in_seconds ${TARGET_DIR}/output/${KEY}_fade.mp4)
 ##########################################################################
 echo "-------------------------------------------------------------"
 echo "Upload processed video to s3: $(convertsecs $NEW_DURATION)"
 echo "-------------------------------------------------------------"
 ##########################################################################
+
+if ! [ -z "$SLACK_CHANNEL_ID" ]; then
+  if ! [ -z "$SLACK_TOKEN" ]; then
+    if ! [ -z "$SLACK_USER_ID" ]; then
+      PROGRESS_CHECK=$(date +%s)
+      PROG_CHECK_SEC=$((PROGRESS_CHECK-NOW))
+      PROG_CHECK_RTM=$(convertsecs $PROG_CHECK_SEC)
+      slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log[${PROG_CHECK_RTM}]: Save final video to s3 and meta-data in database\`\`\`"
+    fi
+fi
 
 # Upload to s3
 aws s3 cp ${TARGET_DIR}/output/${KEY}_fade.mp4 ${TARGET_BASE}/${PROCESSED_FILENAME}
@@ -438,6 +517,6 @@ if ! [ -z "$SLACK_CHANNEL_ID" ]; then
     MSG_ARTIST="Artist:\n${ARTIST_NAME} - ${ARTIST_LINK}\n"
     MSG_MP3="mp3:\n${THIS_MPTHREE}\n"
     MSG_CACHED_MP3="Cached mp3:\n${BUCKET_PUBLIC_URL}/audio/${SONG_SHA}.mp3"
-    slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "\`\`\`${MSG_DATE}\n${MSG_RUNTIME}\n${MSG_PROCURL}\n${MSG_ARTIST}\n${MSG_MP3}\n${MSG_CACHED_MP3}\`\`\`"
+    slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "\`\`\`${MSG_DATE}\n${MSG_RUNTIME}\n${MSG_PROCURL}\n${MSG_ARTIST}\nTHIS_ARTIST:${THIS_ARTIST}\n${MSG_MP3}\n${MSG_CACHED_MP3}\`\`\`"
   fi
 fi
