@@ -29,7 +29,7 @@ Usage: ./db.sh [arguments]
                                       db while queries are being run
   *** --action        [str]         - [get-raw-keys,get-processed-keys,get-audio-keys,
                                        get-raw-video-by-key,get-processed-video-by-key,
-                                       get-audio-by-key]
+                                       get-audio-by-key,get-video-data]
 EOF
 
 
@@ -124,6 +124,16 @@ if [ "$DB_ACTION" == "get-processed-video-by-key" ]; then
   echo "{\"$DB_KEY\":{\"name\":\"$NAME\",\"file\":\"$FILE\",\"date\":\"$YEAR/$MONTH/$DAY\",\"audio\":\"$SHA\",\"created\":$CREATED,\"duration\":$DURATION}}"
   # print json withOUT key
   # echo "{\"name\":\"$NAME\",\"file\":\"$FILE\",\"date\":\"$YEAR/$MONTH/$DAY\",\"audio\":\"$SHA\",\"created\":$CREATED,\"duration\":$DURATION}"
+  exit 0
+fi
+
+
+if [ "$DB_ACTION" == "get-video-data" ]; then
+  if [ -z "$DB_KEY" ]; then
+    echo "Must provide key to get raw video"
+    exit 1
+  fi
+  get_processed_video_data $SQLITE_BUCKET $SQLITE_LOCAL $DB_KEY
   exit 0
 fi
 

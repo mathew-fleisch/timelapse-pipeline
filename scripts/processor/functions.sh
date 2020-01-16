@@ -525,6 +525,67 @@ get_audio_sha_processed_video()  {
 
 }
 
+get_processed_video_data()  {
+  if [ -z "$1" ]; then
+    echo "must include s3 bucket+path+filename to store the db"
+    exit 1
+  fi
+  if [ -z "$2" ]; then
+    echo "must include local file to store the db"
+    exit 1
+  fi
+  if [ -z "$3" ]; then
+    echo "must include a key (NAME_YYYY_MM_DD)"
+    exit 1
+  fi
+
+  # Delete any local dbs that may already exist
+  if [ -f "$2" ]; then
+    rm -rf "$2"
+  fi
+
+  if ! [ -z "$DEBUG" ]; then
+    echo "Remote: \"$1\""
+    echo "Local: \"$2\""
+    echo "Key: \"$3\""
+  fi
+
+
+  # Copy the sqlite db from s3
+  aws s3 cp $1 $2 --quiet
+
+  if ! [ -f "$2" ]; then
+    echo "error pulling sqlite db from s3..."
+    exit 1
+  fi
+
+  # Run queries
+
+  ENCODED=$(sqlite3 $2 "select audio from video where key = \"$3\";")
+  NAME=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $2}') | sed -e 's/"/\\"/g')
+  FILE=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $3}') | sed -e 's/"/\\"/g')
+  YEAR=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $4}') | sed -e 's/"/\\"/g')
+  MONTH=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $5}') | sed -e 's/"/\\"/g')
+  DAY=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $6}') | sed -e 's/"/\\"/g')
+  SHA=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $7}') | sed -e 's/"/\\"/g')
+  CREATED=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $8}') | sed -e 's/"/\\"/g')
+  DURATION=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $9}') | sed -e 's/"/\\"/g')
+  if [ $MONTH -lt 10 ]; then MONTH="0$MONTH"; fi
+  if [ $DAY -lt 10 ]; then DAY="0$DAY"; fi
+  # print json with key
+
+  # SHA=$(sqlite3 $2 "select audio from video where key = \"$3\";")
+  ENCODED=$(sqlite3 $2 "select * from audio where sha = \"$SHA\";")
+  ARTIST=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $2}') | sed -e 's/"/\\"/g')
+  ALBUM=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $3}') | sed -e 's/"/\\"/g')
+  GENRE=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $4}') | sed -e 's/"/\\"/g')
+  MPTHREE=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $5}') | sed -e 's/"/\\"/g')
+  # print json with key
+  echo "{\"$DB_KEY\":{\"name\":\"$NAME\",\"file\":\"$FILE\",\"date\":\"$YEAR/$MONTH/$DAY\",\"audio\":\"$SHA\",\"created\":$CREATED,\"duration\":$DURATION,\"$audio\":{\"artist\":\"$ARTIST\",\"album\":\"$ALBUM\",\"genre\":\"$GENRE\",\"mp3\":\"$MPTHREE\"}}}"
+
+
+}
+
 remove_processed_video()  {
   if [ -z "$1" ]; then
     echo "must include s3 bucket+path+filename to store the db"
