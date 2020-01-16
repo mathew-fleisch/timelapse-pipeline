@@ -172,5 +172,5 @@ if [ -z "$PROCESSED_VIDEO_EXISTS" ] || [ $OVERWRITE_EXISTING -eq 1 ]; then
   fi
 else
   # Video found in s3 bucket. Display link to video
-  echo "${BUCKET_PUBLIC_URL}/${T_YEAR}_${T_MONTH}_${T_DAY}/${SOURCE_NAME}_${T_YEAR}_${T_MONTH}_${T_DAY}.mp4"
+  echo "${BUCKET_PUBLIC_URL}/videos/processed/${T_YEAR}_${T_MONTH}_${T_DAY}/${SOURCE_NAME}_${T_YEAR}_${T_MONTH}_${T_DAY}.mp4"
 fi
