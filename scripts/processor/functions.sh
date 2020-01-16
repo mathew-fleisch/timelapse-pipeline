@@ -561,7 +561,7 @@ get_processed_video_data()  {
 
   # Run queries
 
-  ENCODED=$(sqlite3 $2 "select audio from video where key = \"$3\";")
+  ENCODED=$(sqlite3 $2 "select * from video where key = \"$3\";")
   if ! [ -z "$DEBUG" ]; then
     echo "sqlite query: ${ENCODED}"
   fi
