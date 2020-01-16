@@ -158,14 +158,54 @@ fi
 PROCESSED_VIDEO_EXISTS=$(aws s3 ls ${TARGET_BASE}/${PROCESSED_FILENAME})
 if ! [ -z "$PROCESSED_VIDEO_EXISTS" ]; then
   # Delete video from database
-  echo "Video already processed. Audio must suck. try again. Backup video. delete audio from db. add sha to rejected list. delete processed video from db"
+  echo "Video already processed. Audio must suck. try again. Backup video. delete processed video from db"
   
   # Copy processed video locally
   mkdir -p ${TARGET_DIR}/tmp
   aws s3 cp ${TARGET_BASE}/${PROCESSED_FILENAME} ${TARGET_DIR}/tmp/${FILENAME}
 
   # Get meta-data about existing file
-  
+  EXISTING_SHA=$(get_audio_sha_processed_video ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timelapse.db ${KEY})
+
+  # Backup processed video
+  BACKUP_FILENAME="videos/backup/${KEY}_${EXISTING_SHA}.mp4"
+  aws s3 cp ${TARGET_DIR}/tmp/${FILENAME} ${TARGET_BASE}/${BACKUP_FILENAME}
+
+  # Check to see that file was backed up
+  BACKED_UP=$(aws s3 ls ${TARGET_BASE}/${BACKUP_FILENAME})
+  if [ -z "$BACKED_UP" ]; then
+    echo "ERROR backing up file in overwrite audio flow"
+
+    if ! [ -z "$SLACK_CHANNEL_ID" ]; then
+      if [ -z "$SLACK_TOKEN" ]; then
+        echo "Slack Token is required to run this action."
+      else
+        PROGRESS_CHECK=$(date +%s)
+        PROG_CHECK_SEC=$((PROGRESS_CHECK-NOW))
+        PROG_CHECK_RTM=$(convertsecs $PROG_CHECK_SEC)
+        slack_message $SLACK_TOKEN $SLACK_CHANNEL_ID "\`\`\`[ERROR]${T_YEAR}/${T_MONTH}/${T_DAY}-log[${PROG_CHECK_RTM}]: Could not back-up file in overwrite audio flow\`\`\`"
+      fi
+    fi
+
+    exit 1
+  fi
+
+  # Delete video from db & s3
+  delete_processed_video ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timelapse.db ${KEY}
+  aws s3 rm ${TARGET_BASE}/${PROCESSED_FILENAME}
+
+
+  if ! [ -z "$SLACK_CHANNEL_ID" ]; then
+    if ! [ -z "$SLACK_TOKEN" ]; then
+      if ! [ -z "$SLACK_USER_ID" ]; then
+        PROGRESS_CHECK=$(date +%s)
+        PROG_CHECK_SEC=$((PROGRESS_CHECK-NOW))
+        PROG_CHECK_RTM=$(convertsecs $PROG_CHECK_SEC)
+        slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log[${PROG_CHECK_RTM}]: This camera+date has already been processed. Archived existing file and will generate new one, with new audio.\n${BUCKET_PUBLIC_URL}/${BACKUP_FILENAME}\`\`\`"
+      fi
+    fi
+  fi
+  # Previously generated video removed... Ready to pull down raw video, and pick new audio file.
 fi
 
 
@@ -493,7 +533,7 @@ echo "-------------------------------------------------------------"
 ##########################################################################
 
 # Save meta-data about processed video (key, name, filename, year, month, day, audio, created, duration)
-put_video ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timelapse.db "$KEY" "$NAME" "$PROCESSED_FILENAME" $T_YEAR $T_MONTH $T_DAY "$SONG_SHA" $NOW $NEW_DURATION
+put_processed_video ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timelapse.db "$KEY" "$NAME" "$PROCESSED_FILENAME" $T_YEAR $T_MONTH $T_DAY "$SONG_SHA" $NOW $NEW_DURATION
 
 # Upload to youtube (could be separate step... perhaps... with testcafe... wtf)
 

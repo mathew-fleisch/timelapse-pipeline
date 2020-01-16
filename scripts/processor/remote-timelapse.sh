@@ -21,14 +21,16 @@ Functions to trigger various circleci timelapse jobs
 *** - Required parameter
 Usage: ./remote-timelapse.sh [arguments]
 
-  *** --circle-token  [str] - Overwrites environment variable TIMELAPSE_CIRCLE_TOKEN
-  *** --org-fork      [str] - github/circleci org/user to run jobs under
-  *** --source-name   [str] - Name of camera (used as key for grouping)
-  *** --source-base   [str] - s3 bucket+path of the source images
-  *** --target-date   [str] - Date to generate timelapse
-  *** --target-base   [str] - s3 bucket+path of where video will end up
-  *** --slack-channel [str] - Report completion to this slack channel
-  *** --slack-user    [str] - Report status updates to this slack user id
+  *** --circle-token   [str]  - Overwrites environment variable TIMELAPSE_CIRCLE_TOKEN
+  *** --org-fork       [str]  - github/circleci org/user to run jobs under
+  *** --source-name    [str]  - Name of camera (used as key for grouping)
+  *** --source-base    [str]  - s3 bucket+path of the source images
+  *** --target-date    [str]  - Date to generate timelapse
+  *** --target-base    [str]  - s3 bucket+path of where video will end up
+  *** --slack-channel  [str]  - Report completion to this slack channel
+  *** --slack-user     [str]  - Report status updates to this slack user id
+  --overwrite-existing [bool] - If there is already a processed video, overwrite (default:0)
+  --use-existing-audio [sha]  - Audio sha from existing download. 
 
 
 EOF
@@ -149,11 +151,16 @@ if [ -z "$PROCESSED_VIDEO_EXISTS" ] || [ "$OVERWRITE_EXISTING" -eq 1 ]; then
         "SLACK_TOKEN":"'$SLACK_TOKEN'",
         "EXISTING_AUDIO":"'$EXISTING_AUDIO'"
       }}')
+  if ! [ -z "$DEBUG" ]; then
+    echo $json | jq '.'
+  fi
   response=$(curl -s -X POST --data $json --header "Content-Type:application/json" --url "$BUILD_URL")
 
   echo "https://circleci.com/gh/${ORG_FORK}/timelapse-pipeline/$(echo $response | jq -r -c '.build_num')"
   # Debug full response
-  # echo $response | jq '.'
+  if ! [ -z "$DEBUG" ]; then
+    echo $response | jq '.'
+  fi
 else
   # Video found in s3 bucket. Display link to video
   echo "${BUCKET_PUBLIC_URL}/${T_YEAR}_${T_MONTH}_${T_DAY}/${SOURCE_NAME}_${T_YEAR}_${T_MONTH}_${T_DAY}.mp4"

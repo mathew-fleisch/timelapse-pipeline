@@ -400,7 +400,7 @@ get_processed_video() {
 
   sqlite3 $2 "select * from video where key = \"$3\";"
 }
-put_video()  {
+put_processed_video()  {
   if [ -z "$1" ]; then
     echo "must include s3 bucket+path+filename to store the db"
     exit 1
@@ -476,6 +476,91 @@ put_video()  {
 
   # Run query
   sqlite3 $2 "insert into video (key, name, filename, year, month, day, audio, created, duration) values (\"$3\", \"$4\", \"$5\", $6, $7, $8, \"$9\", ${10}, ${11});"
+
+  # Copy the sqlite db back to s3
+  aws s3 cp $2 $1 --quiet
+
+
+}
+get_audio_sha_processed_video()  {
+  if [ -z "$1" ]; then
+    echo "must include s3 bucket+path+filename to store the db"
+    exit 1
+  fi
+  if [ -z "$2" ]; then
+    echo "must include local file to store the db"
+    exit 1
+  fi
+  if [ -z "$3" ]; then
+    echo "must include a key (NAME_YYYY_MM_DD)"
+    exit 1
+  fi
+
+  # Delete any local dbs that may already exist
+  if [ -f "$2" ]; then
+    rm -rf "$2"
+  fi
+
+  if ! [ -z "$DEBUG" ]; then
+    echo "Remote: \"$1\""
+    echo "Local: \"$2\""
+    echo "Key: \"$3\""
+  fi
+
+
+  # Copy the sqlite db from s3
+  aws s3 cp $1 $2 --quiet
+
+  if ! [ -f "$2" ]; then
+    echo "error pulling sqlite db from s3..."
+    exit 1
+  fi
+
+  # Run query
+  sqlite3 $2 "select audio from video where key = \"$3\";"
+
+  # Copy the sqlite db back to s3
+  aws s3 cp $2 $1 --quiet
+
+
+}
+
+remove_processed_video()  {
+  if [ -z "$1" ]; then
+    echo "must include s3 bucket+path+filename to store the db"
+    exit 1
+  fi
+  if [ -z "$2" ]; then
+    echo "must include local file to store the db"
+    exit 1
+  fi
+  if [ -z "$3" ]; then
+    echo "must include a key (NAME_YYYY_MM_DD)"
+    exit 1
+  fi
+
+  # Delete any local dbs that may already exist
+  if [ -f "$2" ]; then
+    rm -rf "$2"
+  fi
+
+  if ! [ -z "$DEBUG" ]; then
+    echo "Remote: \"$1\""
+    echo "Local: \"$2\""
+    echo "Key: \"$3\""
+  fi
+
+
+  # Copy the sqlite db from s3
+  aws s3 cp $1 $2 --quiet
+
+  if ! [ -f "$2" ]; then
+    echo "error pulling sqlite db from s3..."
+    exit 1
+  fi
+
+  # Run query
+  sqlite3 $2 "delete from video where key = \"$3\";"
 
   # Copy the sqlite db back to s3
   aws s3 cp $2 $1 --quiet
