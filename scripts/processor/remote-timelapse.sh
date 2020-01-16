@@ -133,12 +133,16 @@ if [ -z "$T_YEAR" ]; then
   exit 0
 fi
 
-
-
+if ! [ -z "$DEBUG" ]; then
+  echo "Check to see if video exists:"
+  echo "${TARGET_BASE}/${T_YEAR}_${T_MONTH}_${T_DAY}/${SOURCE_NAME}_${T_YEAR}_${T_MONTH}_${T_DAY}.mp4"
+fi
 PROCESSED_VIDEO_EXISTS=$(aws s3 ls ${TARGET_BASE}/${T_YEAR}_${T_MONTH}_${T_DAY}/${SOURCE_NAME}_${T_YEAR}_${T_MONTH}_${T_DAY}.mp4)
+if ! [ -z "$DEBUG" ]; then
+  echo "$PROCESSED_VIDEO_EXISTS"
+fi
 
-
-if [ -z "$PROCESSED_VIDEO_EXISTS" ] || [ "$OVERWRITE_EXISTING" -eq 1 ]; then
+if [ -z "$PROCESSED_VIDEO_EXISTS" ] || [ $OVERWRITE_EXISTING -eq 1 ]; then
   echo "Video not found for $TARGET_DATE. Let's generate one..."
   json=$(jq -c -r -n '{"build_parameters":{
         "CIRCLE_JOB":"make_timelapse",
