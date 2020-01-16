@@ -43,7 +43,7 @@ urldecode() {
 
 num_files() {
   if [ -d "$1" ]; then
-    echo $(find ${1}/ -maxdepth 1 | wc -l)
+    find "$1" -maxdepth 1 | wc -l
   else
     echo "Error: Directory does not exist"
   fi
@@ -437,11 +437,11 @@ put_processed_video()  {
     echo "must include a audio file sha (of mp3 link)"
     exit 1
   fi
-  if [ -z "$10" ]; then
+  if [ -z "${10}" ]; then
     echo "must include a created epoch timestamp"
     exit 1
   fi
-  if [ -z "$11" ]; then
+  if [ -z "${11}" ]; then
     echo "must include a duration (integer)"
     exit 1
   fi
@@ -572,8 +572,6 @@ get_processed_video_data()  {
   DURATION=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $9}') | sed -e 's/"/\\"/g')
   if [ $MONTH -lt 10 ]; then MONTH="0$MONTH"; fi
   if [ $DAY -lt 10 ]; then DAY="0$DAY"; fi
-  # print json with key
-
   # SHA=$(sqlite3 $2 "select audio from video where key = \"$3\";")
   ENCODED=$(sqlite3 $2 "select * from audio where sha = \"$SHA\";")
   ARTIST=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $2}') | sed -e 's/"/\\"/g')
@@ -581,7 +579,7 @@ get_processed_video_data()  {
   GENRE=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $4}') | sed -e 's/"/\\"/g')
   MPTHREE=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $5}') | sed -e 's/"/\\"/g')
   # print json with key
-  echo "{\"$DB_KEY\":{\"name\":\"$NAME\",\"file\":\"$FILE\",\"date\":\"$YEAR/$MONTH/$DAY\",\"audio\":\"$SHA\",\"created\":$CREATED,\"duration\":$DURATION,\"$audio\":{\"artist\":\"$ARTIST\",\"album\":\"$ALBUM\",\"genre\":\"$GENRE\",\"mp3\":\"$MPTHREE\"}}}"
+  echo "{\"$DB_KEY\":{\"name\":\"$NAME\",\"file\":\"$FILE\",\"date\":\"$YEAR/$MONTH/$DAY\",\"created\":$CREATED,\"duration\":$DURATION,\"audio\":{\"artist\":\"$ARTIST\",\"album\":\"$ALBUM\",\"genre\":\"$GENRE\",\"mp3\":\"$MPTHREE\",\"mp3sha\":\"$SHA\"}}}"
 
 
 }
