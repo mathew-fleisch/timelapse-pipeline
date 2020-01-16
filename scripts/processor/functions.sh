@@ -562,6 +562,9 @@ get_processed_video_data()  {
   # Run queries
 
   ENCODED=$(sqlite3 $2 "select audio from video where key = \"$3\";")
+  if ! [ -z "$DEBUG" ]; then
+    echo "sqlite query: ${ENCODED}"
+  fi
   NAME=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $2}') | sed -e 's/"/\\"/g')
   FILE=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $3}') | sed -e 's/"/\\"/g')
   YEAR=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $4}') | sed -e 's/"/\\"/g')
@@ -574,6 +577,9 @@ get_processed_video_data()  {
   if [[ $DAY -lt 10 ]]; then DAY="0$DAY"; fi
   # SHA=$(sqlite3 $2 "select audio from video where key = \"$3\";")
   ENCODED=$(sqlite3 $2 "select * from audio where sha = \"$SHA\";")
+  if ! [ -z "$DEBUG" ]; then
+    echo "sqlite query: ${ENCODED}"
+  fi
   ARTIST=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $2}') | sed -e 's/"/\\"/g')
   ALBUM=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $3}') | sed -e 's/"/\\"/g')
   GENRE=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $4}') | sed -e 's/"/\\"/g')

@@ -104,6 +104,15 @@ if [ "$DB_ACTION" == "get-raw-video-by-key" ]; then
   exit 0
 fi
 
+if [ "$DB_ACTION" == "get-video-data" ]; then
+  if [ -z "$DB_KEY" ]; then
+    echo "Must provide key to get video data"
+    exit 1
+  fi
+  get_processed_video_data $SQLITE_BUCKET $SQLITE_LOCAL $DB_KEY
+  exit 0
+fi
+
 if [ "$DB_ACTION" == "get-processed-video-by-key" ]; then
   if [ -z "$DB_KEY" ]; then
     echo "Must provide key to get processed video"
@@ -127,15 +136,6 @@ if [ "$DB_ACTION" == "get-processed-video-by-key" ]; then
   exit 0
 fi
 
-
-if [ "$DB_ACTION" == "get-video-data" ]; then
-  if [ -z "$DB_KEY" ]; then
-    echo "Must provide key to get raw video"
-    exit 1
-  fi
-  get_processed_video_data $SQLITE_BUCKET $SQLITE_LOCAL $DB_KEY
-  exit 0
-fi
 
 if [ "$DB_ACTION" == "get-audio-by-key" ]; then
   if [ -z "$DB_KEY" ]; then
