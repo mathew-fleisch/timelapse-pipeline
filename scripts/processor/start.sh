@@ -191,7 +191,7 @@ if ! [ -z "$PROCESSED_VIDEO_EXISTS" ]; then
   fi
 
   # Delete video from db & s3
-  delete_processed_video ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timelapse.db ${KEY}
+  remove_processed_video ${TARGET_BASE}/${SQLITE_DB} ${TARGET_DIR}/timelapse.db ${KEY}
   aws s3 rm ${TARGET_BASE}/${PROCESSED_FILENAME}
 
 
