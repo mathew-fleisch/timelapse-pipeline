@@ -517,8 +517,8 @@ if ! [ -z "$SLACK_CHANNEL_ID" ]; then
     echo "Slack Token is required to run this action."
     exit 0
   else
-    ARTIST_NAME=$(echo $THIS_ARTIST | s -e 's/^.*">//g' | sed -e 's/<\/a>.*$//g')
-    ARTIST_LINK=$(echo $THIS_ARTIST | s -e 's/.*a href="(.*)">.*/\1/g')
+    ARTIST_NAME=$(echo $THIS_ARTIST | sed -e 's/^.*">//g' | sed -e 's/<\/a>.*$//g')
+    ARTIST_LINK=$(echo $THIS_ARTIST | sed -e 's/.*a href="(.*)">.*/\1/g')
     TMP_ARTIST=$(echo $THIS_ARTIST | sed -e 's/"/\\\"/g')
     MSG_RUNTIME="Timelapse Complete:\n${runtime}\n"
     MSG_DATE="Date/Camera:\n${T_YEAR}/${T_MONTH}/${T_DAY} - ${NAME}\n"
