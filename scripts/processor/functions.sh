@@ -570,8 +570,8 @@ get_processed_video_data()  {
   SHA=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $7}') | sed -e 's/"/\\"/g')
   CREATED=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $8}') | sed -e 's/"/\\"/g')
   DURATION=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $9}') | sed -e 's/"/\\"/g')
-  if [ $MONTH -lt 10 ]; then MONTH="0$MONTH"; fi
-  if [ $DAY -lt 10 ]; then DAY="0$DAY"; fi
+  if [[ $MONTH -lt 10 ]]; then MONTH="0$MONTH"; fi
+  if [[ $DAY -lt 10 ]]; then DAY="0$DAY"; fi
   # SHA=$(sqlite3 $2 "select audio from video where key = \"$3\";")
   ENCODED=$(sqlite3 $2 "select * from audio where sha = \"$SHA\";")
   ARTIST=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $2}') | sed -e 's/"/\\"/g')
