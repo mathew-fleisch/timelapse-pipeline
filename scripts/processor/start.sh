@@ -432,15 +432,15 @@ else
 fi
 
 
-  if ! [ -z "$SLACK_CHANNEL_ID" ]; then
-    if ! [ -z "$SLACK_TOKEN" ]; then
-      if ! [ -z "$SLACK_USER_ID" ]; then
-        PROGRESS_CHECK=$(date +%s)
-        PROG_CHECK_SEC=$((PROGRESS_CHECK-NOW))
-        PROG_CHECK_RTM=$(convertsecs $PROG_CHECK_SEC)
-        slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log[${PROG_CHECK_RTM}]: Merging with timelapse\n${BUCKET_PUBLIC_URL}/audio/${SONG_SHA}.mp3\n${BUCKET_PUBLIC_URL}/${TARGET_FILENAME}\`\`\`"
-      fi
-  fi
+if ! [ -z "$SLACK_CHANNEL_ID" ]; then
+  if ! [ -z "$SLACK_TOKEN" ]; then
+    if ! [ -z "$SLACK_USER_ID" ]; then
+      PROGRESS_CHECK=$(date +%s)
+      PROG_CHECK_SEC=$((PROGRESS_CHECK-NOW))
+      PROG_CHECK_RTM=$(convertsecs $PROG_CHECK_SEC)
+      slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log[${PROG_CHECK_RTM}]: Merging with timelapse\n${BUCKET_PUBLIC_URL}/audio/${SONG_SHA}.mp3\n${BUCKET_PUBLIC_URL}/${TARGET_FILENAME}\`\`\`"
+    fi
+  fi  
 fi
 ##########################################################################
 echo "-------------------------------------------------------------"
@@ -461,6 +461,7 @@ if ! [ -z "$SLACK_CHANNEL_ID" ]; then
       PROG_CHECK_RTM=$(convertsecs $PROG_CHECK_SEC)
       slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log[${PROG_CHECK_RTM}]: Audio/Video merged. Add fade in/out\`\`\`"
     fi
+  fi
 fi
 
 NEW_DURATION=$(get_duration_in_seconds ${TARGET_DIR}/output/${KEY}_fade.mp4)
@@ -478,6 +479,7 @@ if ! [ -z "$SLACK_CHANNEL_ID" ]; then
       PROG_CHECK_RTM=$(convertsecs $PROG_CHECK_SEC)
       slack_message_ephemeral $SLACK_TOKEN $SLACK_CHANNEL_ID $SLACK_USER_ID "\`\`\`${T_YEAR}/${T_MONTH}/${T_DAY}-log[${PROG_CHECK_RTM}]: Save final video to s3 and meta-data in database\`\`\`"
     fi
+  fi
 fi
 
 # Upload to s3
