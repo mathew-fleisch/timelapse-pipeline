@@ -127,8 +127,8 @@ if [ "$DB_ACTION" == "get-processed-video-by-key" ]; then
   SHA=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $7}') | sed -e 's/"/\\"/g')
   CREATED=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $8}') | sed -e 's/"/\\"/g')
   DURATION=$(urldecode $(echo $ENCODED | sed -e 's/|/ /g' | awk '{print $9}') | sed -e 's/"/\\"/g')
-  if [ $MONTH -lt 10 ]; then MONTH="0$MONTH"; fi
-  if [ $DAY -lt 10 ]; then DAY="0$DAY"; fi
+  if [[ $MONTH -lt 10 ]]; then MONTH="0$MONTH"; fi
+  if [[ $DAY -lt 10 ]]; then DAY="0$DAY"; fi
   # print json with key
   echo "{\"$DB_KEY\":{\"name\":\"$NAME\",\"file\":\"$FILE\",\"date\":\"$YEAR/$MONTH/$DAY\",\"audio\":\"$SHA\",\"created\":$CREATED,\"duration\":$DURATION}}"
   # print json withOUT key
