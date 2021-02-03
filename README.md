@@ -27,7 +27,7 @@ cp config.sample.json config.json
 pwd
 
 # Run/Debug script manually (normal use is intended to be executed via cron. see below)
-./timelapse.sh /tmp/timelapse-stage
+./timelapse.sh config.json /tmp/timelapse-stage
 
 # Set up cron
 crontab -e

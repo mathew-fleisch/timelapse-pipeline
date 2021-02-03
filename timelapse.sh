@@ -95,7 +95,7 @@ while [ $sunrise -ge $(date +%s) ]; do
   echo "Waiting for sunrise... ($(date +%F\ %H:%M:%S))"
   sleep 60
 done
-echo "Sunrise triggered: $sunrise"
+echo "Current epoch: $(date +%s)  >  Sunrise epoch: $sunrise"
 echo "$hr"
 sleep 3
 while [ $sunrise -le $(date +%s) ]; do
@@ -105,8 +105,9 @@ while [ $sunrise -le $(date +%s) ]; do
     year=$(date "+%Y")
     mkdir -p $stage_dir/$today
     # Start saving images to stage-directory
-    raspistill -tl $delay_ms -dt -n -e jpg -ex auto -awb auto -md 2 -q 100 -w $width -h $height -o "$stage_dir/$today/${year}_%d.jpg" &
+    raspistill -t 61200000 -tl $delay_ms -dt -n -e jpg -ex auto -awb auto -md 2 -q 100 -w $width -h $height -o "$stage_dir/$today/${year}_%d.jpg" &
     echo "Timelapse Started!"
+    echo "raspistill -t 61200000 -tl $delay_ms -dt -n -e jpg -ex auto -awb auto -md 2 -q 100 -w $width -h $height -o \"$stage_dir/$today/${year}_%d.jpg\""
   else
     # A raspistill pid exists
     # echo "pid: ${pid}"
@@ -137,9 +138,13 @@ while [ $sunrise -le $(date +%s) ]; do
   fi
 done
 kill -9 $(pidof raspistill)
+sleep 5
+echo "$hr"
+echo "Current epoch: $(date +%s)  >  Sunset epoch: $sunset"
 echo "$hr"
 echo "Images complete! Moving to video processing... $today"
 pushd $stage_dir/$today
+echo "ffmpeg -hide_banner -framerate $framerate -pattern_type glob -i '*.jpg' -c:v libx265 -crf 25 \"$stage_dir/TreeCam-$today.mp4\""
 ffmpeg -hide_banner -framerate $framerate -pattern_type glob -i '*.jpg' -c:v libx265 -crf 25 "$stage_dir/TreeCam-$today.mp4"
 popd
 echo "$hr"
