@@ -33,3 +33,28 @@ pwd
 crontab -e
 0 4 * * * [SCRIPT-LOCATION]/timelapse.sh /tmp/timelapse-stage >> /tmp/timelapse-stage/log.txt 2>&1
 ```
+
+
+### Fan Control (optional)
+
+The fan noise can be annoying but it is helpful when processing video. To that end, I have used a transistor and a gpio pin to turn the fan on/off electronically. It will turn on when the on-board temperature is over the target threshold and turn off when it is under that threshold.
+
+```
+# ./fan-control.sh [gpio-pin] [threshold-temperature-celsius]
+./fan-control.sh 14 45
+Fan Control - Pin(21) - Threshold(45°C)
+timestamp               temp    fan
+2021-02-07 21:23:56 	55°C	ON
+2021-02-07 21:24:06 	53°C	ON
+2021-02-07 21:24:11 	52°C	ON
+2021-02-07 21:24:16 	51°C	ON
+2021-02-07 21:24:21 	52°C	ON
+2021-02-07 21:24:26 	51°C	ON
+2021-02-07 21:24:31 	50°C	ON
+2021-02-07 21:24:41 	49°C	ON
+2021-02-07 21:24:46 	48°C	ON
+2021-02-07 21:24:56 	47°C	ON
+2021-02-07 21:25:16 	46°C	ON
+2021-02-07 21:25:26 	45°C	OFF
+```
+
