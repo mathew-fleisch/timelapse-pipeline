@@ -103,16 +103,16 @@ echo "$hr"
 # Track number of images
 last=-1
 trig=0
-while [ $sunrise -ge $(date +%s) ]; do
-  now=$(date +%s)
-  to_sunrise_diff=$((sunrise-now))
-  runtime=$(convertsecs $to_sunrise_diff)
-  echo "Waiting for sunrise... ($(date +%F\ %H:%M:%S): $runtime)"
-  sleep 60
-done
+now=$(date +%s)
+to_sunrise_diff=$((sunrise-now))
+to_sunrise_pretty=$(convertsecs $to_sunrise_diff)
+echo "Waiting for sunrise..."
+echo "Sunrise:      $sunrise_pretty"
+echo "Current Time: $(date +%F\ %H:%M:%S)"
+echo "Sleep Time:   $to_sunrise_pretty"
+sleep $to_sunrise_diff
 echo "$(date +%F\ %H:%M:%S) Sunrise!!!"
 echo "$hr"
-sleep 3
 while [ $sunset -ge $(date +%s) ]; do
   pid=$(pidof raspistill)
   # If there is no raspistill pid, start up the timelapse
