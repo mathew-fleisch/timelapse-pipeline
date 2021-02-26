@@ -27,7 +27,7 @@ get_temp() {
 
 # Log target pin/threshold and log each iteration in three columns (timestamp, temperature, fan state)
 echo "Fan Control - Pin($target_pin) - Threshold(${target_threshold}°C)"
-echo "timestamp               temp           fan"
+echo "timestamp               temp            fan"
 sleep 2
 while true; do
   # Get temp
