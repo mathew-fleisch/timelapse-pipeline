@@ -109,7 +109,7 @@ to_sunrise_pretty=$(convertsecs $to_sunrise_diff)
 echo "Waiting for sunrise..."
 echo "Sunrise:      $sunrise_pretty"
 echo "Current Time: $(date +%F\ %H:%M:%S)"
-echo "Sleep Time:   $to_sunrise_pretty"
+echo "Sleep Time:   $to_sunrise_pretty ($to_sunrise_diff seconds)"
 sleep $to_sunrise_diff
 echo "$(date +%F\ %H:%M:%S) Sunrise!!!"
 echo "$hr"
