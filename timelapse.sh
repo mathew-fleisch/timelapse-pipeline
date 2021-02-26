@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2164,SC2086,SC2046
 hr="--------------------------------------------------------------"
 IFS='' read -r -d '' banner <<"EOF"
 
@@ -15,7 +16,14 @@ EOF
 echo "$hr$banner$hr"
 echo "Starting: $(date +%F\ %H:%M:%S)"
 echo "$hr"
+timelapse_started=$(date +%s)
 
+convertsecs() {
+  ((h=${1}/3600))
+  ((m=(${1}%3600)/60))
+  ((s=${1}%60))
+  printf "%02d:%02d:%02d\n" $h $m $s
+}
 # Check dependencies
 expected="curl jq ffmpeg raspistill"
 for expect in $expected; do
@@ -65,6 +73,10 @@ timezone=$(echo "$config" | jq -r '.timezone')
 # Video attributes
 framerate=$(echo "$config" | jq -r '.framerate')
 
+# Other attributes
+delay_processing=$(echo "$config" | jq -r '.delay_processing')
+remote_destination=$(echo "$config" | jq -r '.remote_destination')
+
 echo "Configuration:"
 echo "Stage Directory: $stage_dir"
 echo "$1"
@@ -92,13 +104,16 @@ echo "$hr"
 last=-1
 trig=0
 while [ $sunrise -ge $(date +%s) ]; do
-  echo "Waiting for sunrise... ($(date +%F\ %H:%M:%S))"
+  now=$(date +%s)
+  to_sunrise_diff=$((sunrise-now))
+  runtime=$(convertsecs $to_sunrise_diff)
+  echo "Waiting for sunrise... ($(date +%F\ %H:%M:%S): $runtime)"
   sleep 60
 done
-echo "Current epoch: $(date +%s)  >  Sunrise epoch: $sunrise"
+echo "$(date +%F\ %H:%M:%S) Sunrise!!!"
 echo "$hr"
 sleep 3
-while [ $sunrise -le $(date +%s) ]; do
+while [ $sunset -ge $(date +%s) ]; do
   pid=$(pidof raspistill)
   # If there is no raspistill pid, start up the timelapse
   if [ -z "${pid}" ]; then
@@ -112,7 +127,7 @@ while [ $sunrise -le $(date +%s) ]; do
     # A raspistill pid exists
     # echo "pid: ${pid}"
     # Count the current number of images in staging directory
-    num=$(ls ${stage_dir}/$today/*.jpg | wc -l)
+    num=$(find ${stage_dir}/$today/. -name "*.jpg" | wc -l)
     if [[ "${last}" -eq "${num}" ]]; then
       sleep $delay
       trig=$((trig+1))
@@ -133,20 +148,36 @@ while [ $sunrise -le $(date +%s) ]; do
     fi
   fi
   sleep $delay
-  if [ $sunset -le $(date +%s) ]; then
-     break
-  fi
 done
 kill -9 $(pidof raspistill)
+echo "$hr"
+echo "$(date +%F\ %H:%M:%S) Sunset!!!"
+echo "$hr"
 sleep 5
-echo "$hr"
-echo "Current epoch: $(date +%s)  >  Sunset epoch: $sunset"
-echo "$hr"
-echo "Images complete! Moving to video processing... $today"
-pushd $stage_dir/$today
+echo "Recording images complete."
+# Wait until user configured time to process videos to avoid fan noise from ffmpeg/scp.
+delay_processing_epoch=$(date --date "$today $delay_processing" +%s)
+current_time=$(date +%s)
+delay_processing_diff=$((delay_processing_epoch-current_time))
+delay_diff=$(convertsecs $delay_processing_diff)
+echo "Delay processing video until: $today $delay_processing"
+echo "sleeping for $delay_diff"
+sleep $delay_processing_diff
+echo "Moving to video processing... $today"
+pushd $stage_dir
+echo "First make a copy of the images to remote destination"
+scp -r $today $remote_destination
+pushd $today
 echo "ffmpeg -hide_banner -framerate $framerate -pattern_type glob -i '*.jpg' -c:v libx265 -crf 25 \"$stage_dir/TreeCam-$today.mp4\""
 ffmpeg -hide_banner -framerate $framerate -pattern_type glob -i '*.jpg' -c:v libx265 -crf 25 "$stage_dir/TreeCam-$today.mp4"
+echo "Copying video to remote destination."
+scp "$stage_dir/TreeCam-$today.mp4" $remote_destination
+popd
 popd
 echo "$hr"
 echo "Timelapse complete for $today: $(date +%F\ %H:%M:%S)"
+now=$(date +%s)
+runtime_diff=$((now-timelapse_started))
+runtime=$(convertsecs $runtime_diff)
+echo "Runtime: $runtime"
 echo "$hr"

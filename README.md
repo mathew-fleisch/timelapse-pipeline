@@ -40,7 +40,7 @@ crontab -e
 The fan noise can be annoying but it is helpful when processing video. To that end, I have used a transistor and a gpio pin to turn the fan on/off electronically. It will turn on when the on-board temperature is over the target threshold and turn off when it is under that threshold.
 
 ```
-# ./fan-control.sh [gpio-pin] [threshold-temperature-celsius]
+# Usage: ./fan-control.sh [gpio-pin] [threshold-temperature-celsius]
 ./fan-control.sh 14 45
 Fan Control - Pin(21) - Threshold(45°C)
 timestamp               temp    fan
