@@ -1,36 +1,60 @@
 # Timelapse Pipeline
 
-This project has tools and scripts to set up timelapse pipelines using Raspberry Pi + camera to capture stills, and ffmpeg to generate timelapse videos. The goal of this project is completely automate the process to generate, edit and upload videos. The repository assumes you have a raspberry pi + camera, and an external post-processing computer (linux) to store and process videos daily. 
+This project allows you to set up a timelapse using the Raspberry Pi + camera to capture stills, and ffmpeg to generate timelapse videos. Clone the repository, modify the configuration file to match your location, and set up a cron to execute the script every day before the sun rises. An api call to [https://sunrise-sunset.org/api](https://sunrise-sunset.org/api) will get the exact sunrise and sunset for the configured latitude and longitude to determine when to save pictures via raspistill. Once the sun sets, the script will automatically compile the stills into a video using ffmpeg.
+
+### Prerequisites
+
+ - curl
+ - ffmpeg
+ - jq
+ - raspistill
+
+```
+sudo apt update && sudo apt install -y curl ffmpeg jq
+```
 
 ### Installation
 
-todo (write installation instructions and script)
+```
+# Clone Repository
+git clone https://github.com/mathew-fleisch/timelapse-pipeline.git
+cd timelapse-pipeline
 
-### Pipeline
+# Customize config.json to your timezone and location
+cp config.sample.json config.json
 
-***On the Raspberry Pi***
+# Note timelapse-pipline location: [SCRIPT-LOCATION]
+pwd
 
-Images are captured at 1fps via the raspistill command line trigger, and saved to a local staging directory. Another script pushes those images to a long term storage solution, like s3, or directly to the post-processing computer.
- - [scripts/pi/start-timelapse.sh](scripts/pi/start-timelapse.sh)
-    - raspistill saves one picture every second to a holding directory
- - `[TODO]` scripts/pi/clean-up-save.sh
-    - use rsync/awscli/scp to copy all staged images to the long term storage solution
-    - Stores images using the following naming convention:<br />
- `[LONG-TERM-STORAGE-URL]/<camera-name>/<yyyy>/<mm>/<dd>/<yyyy_mm_dd_hh>/yyyy_mm_dd_hh_mm_ss.jpg`
+# Run/Debug script manually (normal use is intended to be executed via cron. see below)
+./timelapse.sh config.json /tmp/timelapse-stage
 
-***On the post-processing computer***
+# Set up cron
+crontab -e
+0 4 * * * [SCRIPT-LOCATION]/timelapse.sh /tmp/timelapse-stage >> /tmp/timelapse-stage/log.txt 2>&1
+```
 
-The Raspberry Pi doesn't have enough processing power to run ffmpeg and takes pictures, so post-processing is expected to be run elsewhere. Images are copied to the post-processing computer, and ffmpeg creates an mp4 after flash frames are removed; occasionally the camera's auto-white-balance will flicker/flash and are removed by an optional flag. 
- - [scripts/processor/start.sh](scripts/processor/start.sh)
-     - Get images from long term storage solution
-     - Saves meta-data to sqlite3
-     - [scripts/processor/timelapse.sh](scripts/processor/timelapse.sh)
-        - Copy the staged images into one directory, and ffmpeg them into an mp4
-        - Can optionally remove flashes via gap detection
-     - [scripts/processor/get-music.sh](scripts/processor/get-music.sh)
-        - Queries/scrapes internet for mp3 files
-     - [scripts/processor/merge-audio-video.sh](scripts/processor/merge-audio-video.sh)
-        - Speeds up video to length of audio file, then merges them together
-     - `[TODO]` scripts/processor/upload-to-youtube.sh
-        - Requires api key, oauth tokens, and username/password to authenticate and upload
-        - Pipe in metadata about mp3 into description
+
+### Fan Control (optional)
+
+The fan noise can be annoying but it is helpful when processing video. To that end, I have used a transistor and a gpio pin to turn the fan on/off electronically. It will turn on when the on-board temperature is over the target threshold and turn off when it is under that threshold.
+
+```
+# Usage: ./fan-control.sh [gpio-pin] [threshold-temperature-celsius]
+./fan-control.sh 14 45
+Fan Control - Pin(21) - Threshold(45°C)
+timestamp               temp    fan
+2021-02-07 21:23:56 	55°C	ON
+2021-02-07 21:24:06 	53°C	ON
+2021-02-07 21:24:11 	52°C	ON
+2021-02-07 21:24:16 	51°C	ON
+2021-02-07 21:24:21 	52°C	ON
+2021-02-07 21:24:26 	51°C	ON
+2021-02-07 21:24:31 	50°C	ON
+2021-02-07 21:24:41 	49°C	ON
+2021-02-07 21:24:46 	48°C	ON
+2021-02-07 21:24:56 	47°C	ON
+2021-02-07 21:25:16 	46°C	ON
+2021-02-07 21:25:26 	45°C	OFF
+```
+

@@ -1,0 +1,12 @@
+{
+    "name": "TimelapseCam",
+    "width": 1920,
+    "height": 1080,
+    "delay": 10,
+    "latitude": 37.802934,
+    "longitude": -122.448455,
+    "timezone": "PST",
+    "framerate": 60,
+    "delay_processing": "23:30",
+    "remote_destination": "user@RemoteHost:/path/to/timelapse"
+}
