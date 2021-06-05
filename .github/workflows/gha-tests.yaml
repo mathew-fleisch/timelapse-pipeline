@@ -1,0 +1,20 @@
+name: timelapse test
+on:
+  push:
+    branches:
+      - gha-tests 
+jobs:
+  build:
+    name: timelapse test
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+      - name: "timelapse test"
+        env:
+          GIT_TOKEN: "something"
+        run: |
+          echo "Test timelapse settings"
+          df -h
+          uname -a
+          which ffmpeg
+          ffmpeg -version
