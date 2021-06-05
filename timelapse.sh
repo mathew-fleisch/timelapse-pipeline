@@ -75,7 +75,9 @@ framerate=$(echo "$config" | jq -r '.framerate')
 
 # Other attributes
 delay_processing=$(echo "$config" | jq -r '.delay_processing')
-remote_destination=$(echo "$config" | jq -r '.remote_destination')
+remote_user_at_host=$(echo "$config" | jq -r '.remote_user_at_host')
+remote_path=$(echo "$config" | jq -r '.remote_path')
+remote_destination="$remote_user_at_host:$remote_path"
 
 echo "Configuration:"
 echo "Stage Directory: $stage_dir"
@@ -173,6 +175,10 @@ ffmpeg -hide_banner -framerate $framerate -pattern_type glob -i '*.jpg' -c:v lib
 echo "Copying video to remote destination."
 scp "$stage_dir/TreeCam-$today.mp4" $remote_destination
 popd
+if [[ $(ls $today | wc -l) -eq $(ssh $remote_user_at_host ls $remote_path/$today | wc -l) ]]; then
+  echo "Files successfully copied to remote... Deleting local copies"
+  rm -rf $today
+fi
 popd
 echo "$hr"
 echo "Timelapse complete for $today: $(date +%F\ %H:%M:%S)"
