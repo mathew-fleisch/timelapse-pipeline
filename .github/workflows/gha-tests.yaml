@@ -20,4 +20,5 @@ jobs:
           ffmpeg -version
           echo "----------"
           echo "$ASDF_DIR"
+          ssh -o StrictHostKeyChecking=no mat@10.10.10.141 "bash -c 'ls /media/mat/TREECAM/2021-04-20/* | wc -l'"
           echo "Test complete"
