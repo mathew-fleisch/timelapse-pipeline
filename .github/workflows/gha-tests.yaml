@@ -18,3 +18,4 @@ jobs:
           uname -a
           which ffmpeg
           ffmpeg -version
+          echo "Test complete"
