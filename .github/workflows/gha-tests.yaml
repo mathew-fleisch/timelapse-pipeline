@@ -18,4 +18,6 @@ jobs:
           uname -a
           which ffmpeg
           ffmpeg -version
+          echo "----------"
+          echo "$ASDF_DIR"
           echo "Test complete"
