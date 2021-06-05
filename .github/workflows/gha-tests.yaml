@@ -21,4 +21,6 @@ jobs:
           echo "----------"
           echo "$ASDF_DIR"
           ssh -o StrictHostKeyChecking=no mat@10.10.10.141 "bash -c 'ls /media/mat/TREECAM/2021-04-20/* | wc -l'"
+          mkdir -p tmp
+          scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null mat@10.10.10.141:/media/mat/TREECAM/2021-05-04/2021_504080009.jpg tmp/.
           echo "Test complete"
